@@ -1,71 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Guess the Number Game</title>
+    <link rel="stylesheet" href="./styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body>
-    <header>
-    </header>
-    <main>
-        <section>
-            <h2>Mission Statement</h2>
-            <p>It is our Mission to give Power to the Artist. Our Blockchain Based Ecosystem gives Musician the Power of
-                their Financials and Copyright - no 3rd Party processing needed.</p>
-        </section>
-        <section>
-            <h2>Why NFTs?</h2>
-            <p>
-                The Blockchain Technology provides unique Proof of Ownership - in a completely transparent ecosystem.
-                NFTs cannot be copied and each one has a unique identifier, which lets you see which address owns your
-                crafts and how often it changes hands.
-            </p>
-        </section>
-        <section>
-            <h2>Main Features</h2>
-            <p>
-            <ul>
-                <li>Create (mint) your NFTs - you decide how many exist!</li>
-                <li>Get paid in realtime</li>
-                <li>Get a Cut of every Resell - completely automated</li>
-                <li>See who supports your craft - build a Community</li>
-            </ul>
-            </p>
-        </section>
-        <section>
-            <h2>Hidden Magic</h2>
-            <p>
-                Our Ecosystem is based on the Ethereum Layer 2 Protocol Loopring. It uses Cryptography to verify each
-                transaction and your account balance. Most existing projects that focus on trading Music NFTs are build
-                on the Polygon Sidechain or Ethereums Layer 1.
+    <h1>Guess the Number Game</h1>
+    <p>Guess a number between 0 and 10 and win 0.1 ETH!</p>
+    <p>Enter your guess:</p>
 
-                Loopring provides cheaper Gas Fees (costs of using the Network - about 100x cheaper!) than Ethereums
-                Mainnet and a better Security Method than Polygon.
-            </p>
-        </section>
-        <section>
-            <h2>The Team</h2>
-            <p>
-                => list our Qualification. We don’t have to show pictures just mention we do the project in a Master
-                Degree Program.
-            </p>
-        </section>
-        <section>
-            <h2>Roadmap</h2>
-        </section>
-        <section>
-            <form>
-                <input type="text" />
-                <input type="email" />
-                <button>click me</button>
-            </form>
-        </section>
-    </main>
-    <footer></footer>
+    <div class="game-container">
+        <input type="number" id="guess-input" placeholder="Enter a number between 0 and 10">
+        <button onclick="submitGuess()">Submit</button>
+    </div>
+
+    <div id="result-container">
+        <h2 id="result-message"></h2>
+        <p id="result-details"></p>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 
 </html>
