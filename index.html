@@ -9,20 +9,23 @@
 
 <body>
     <h1>Guess the Number Game</h1>
-    <p>Guess a number between 0 and 10 and win 0.1 ETH!</p>
+    <p id="walletId"></p>
+    <button id="connect_btn">Connect Wallet</button>
+    <p>Guess a number between 0 and 100</p>
     <p>Enter your guess:</p>
 
     <div class="game-container">
         <input type="number" id="guess-input" placeholder="Enter a number between 0 and 10">
         <button onclick="submitGuess()">Submit</button>
     </div>
+    <p>Entry Fee: 1 ETH</p>
 
     <div id="result-container">
         <h2 id="result-message"></h2>
         <p id="result-details"></p>
     </div>
 
-    <script src="app.js"></script>
+    <script src="index.js"></script>
 </body>
 
 </html>

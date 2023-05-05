@@ -23,13 +23,19 @@ h1 {
 }
 
 button {
-    font-size: 24px;
+    font-size: 1rem;
     background-color: #008CBA;
     color: white;
     padding: 5px 10px;
     border: none;
     border-radius: 5px;
-    width: 100px;
+    min-width: 100px;
+}
+
+#connect_btn {
+    position: absolute;
+    right: 20px;
+    top: 20px;
 }
 
 #result-container {
