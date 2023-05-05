@@ -1,7 +1,7 @@
-
  const connectWeb3Button = document.getElementById('connect_btn');
  const walletId = document.getElementById('walletId');
 connectWeb3Button.addEventListener('click', connectWallet);
+ 
 function connectWallet() {
   if (typeof window.ethereum !== undefined) {
     ethereum
