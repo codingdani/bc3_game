@@ -3,37 +3,36 @@ pragma solidity ^0.8.19;
 
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
-contract GuessingGameL is VRFConsumerBase {
+contract GuessingGame is VRFConsumerBase {
     struct Rules {
-        uint256 min_guess;
-        uint256 max_guess;
-        uint256 min_players;
-        uint256 entry_fee;
+        uint256 minGuess;
+        uint256 maxGuess;
+        uint256 minPlayers;
+        uint256 entryFee;
     }
+
+    mapping(address => uint256) private playersGuesses;
+    mapping(address => uint256) private playersTarget;
+
+    address[] public players;
 
     Rules public RULES;
 
     address public owner;
-    address[] public players;
-    mapping(address => uint256) private guesses;
-    uint256 private sumGuesses;
-
     address public winner;
-    uint256 public winningNumber;
 
     mapping(bytes32 => uint256) private randomNumbers;
-    address[] private tiedPlayers;
 
     constructor(
         address _vrfCoordinator,
         address _linkToken,
-        uint256 _min_guess,
-        uint256 _max_guess,
-        uint256 _min_players,
-        uint256 _entry_fee
+        uint256 _minGuess,
+        uint256 _maxGuess,
+        uint256 _minPlayers,
+        uint256 _entryFee
     ) VRFConsumerBase(_vrfCoordinator, _linkToken) {
         owner = msg.sender;
-        RULES = Rules(_min_guess, _max_guess, _min_players, _entry_fee);
+        RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
     }
 
     modifier onlyOwner() {
@@ -41,48 +40,68 @@ contract GuessingGameL is VRFConsumerBase {
         _;
     }
 
+    // sieht okay für mich aus
     function enterGuess(uint256 _guess) public payable {
-        require(msg.value == RULES.entry_fee, "Insufficient entry fee.");
+        require(msg.value == RULES.entryFee, "Insufficient entry fee.");
         require(
-            _guess >= RULES.min_guess && _guess <= RULES.max_guess,
+            _guess >= RULES.minGuess && _guess <= RULES.maxGuess,
             "Check your input value."
         );
-        require(guesses[msg.sender] == 0, "You have already entered a guess.");
+        require(
+            playersGuesses[msg.sender] == 0,
+            "You have already entered a guess."
+        );
         players.push(msg.sender);
-        guesses[msg.sender] = _guess; //
-        sumGuesses += _guess;
+        playersGuesses[msg.sender] = _guess;
+    }
+
+    function sumGuesses() private view returns (uint256) {
+        uint256 sum = 0;
+        for (uint256 i = 0; i < players.length; i++) {
+            sum = playersGuesses[players[i]];
+        }
+        return sum;
     }
 
     function startGame() public onlyOwner {
-        require(players.length >= RULES.min_players, "Not enough players");
-        uint256 target = ((sumGuesses / players.length) * 66) / 100; // geändert von /3 * 2 wegen genauigkeit und rundung von solidity
-        uint256 closestGuess = RULES.max_guess;
-        address closestPlayer;
+        require(players.length >= RULES.minPlayers, "Not enough players.");
+        uint256 target = ((sumGuesses() / players.length) * 66) / 100; // geändert von /3 * 2 wegen genauigkeit und rundung von solidity
 
+        uint256 minDiff = RULES.maxGuess;
         for (uint256 i = 0; i < players.length; i++) {
-            uint256 playerGuess = guesses[players[i]];
-            uint256 diff = playerGuess > target
-                ? playerGuess - target
-                : target - playerGuess;
-            if (diff < closestGuess) {
-                closestGuess = diff;
-                closestPlayer = players[i];
-                tiedPlayers[0] = closestPlayer;
-            } else if (diff == closestGuess) {
-                tiedPlayers.push(players[i]);
+            if (absDiff(playersGuesses[players[i]], target) <= minDiff) {
+                minDiff = absDiff(playersGuesses[players[i]], target);
             }
         }
-        if (tiedPlayers.length > 1) {
-            uint256 winnerIndex = uint256(randomNumbers[0]) %
-                (tiedPlayers.length + 1);
-            winner = tiedPlayers[winnerIndex];
-            tiedPlayers = new address[](0);
-        } else {
-            winner = closestPlayer;
+
+        uint256 count = 0;
+        for (uint256 i = 0; i < players.length; i++) {
+            if (minDiff == absDiff(playersGuesses[players[i]], target)) {
+                count++;
+            }
         }
 
-        winningNumber = target;
+        address[] memory winners = new address[](count);
+        for (uint256 i = 0; i < players.length; i++) {
+            if (minDiff == absDiff(playersGuesses[players[i]], target)) {
+                winners[i] = players[i];
+            }
+        }
+
+        uint256 winnerIndex = uint256(randomNumbers[0]) % (winners.length);
+        winner = winners[winnerIndex];
         payout();
+    }
+
+    function absDiff(
+        uint256 num1,
+        uint256 num2
+    ) private pure returns (uint256) {
+        if (num1 >= num2) {
+            return num1 - num2;
+        } else {
+            return num2 - num1;
+        }
     }
 
     function payout() private {
@@ -97,7 +116,7 @@ contract GuessingGameL is VRFConsumerBase {
     }
 
     function getMyGuess() public view returns (uint256) {
-        return guesses[msg.sender];
+        return playersGuesses[msg.sender];
     }
 
     function requestRandomNumber() private returns (bytes32) {
