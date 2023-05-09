@@ -12,12 +12,9 @@ contract GuessingGame is VRFConsumerBase {
     }
 
     mapping(address => uint256) private playersGuesses;
-    mapping(address => uint256) private playersTarget;
-
     address[] public players;
 
     Rules public RULES;
-
     address public owner;
     address public winner;
 
@@ -33,6 +30,12 @@ contract GuessingGame is VRFConsumerBase {
     ) VRFConsumerBase(_vrfCoordinator, _linkToken) {
         owner = msg.sender;
         RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
+    }
+
+    receive() external payable {
+        revert(
+            "This contract does not accept Ether, if you don't participate in the Game."
+        );
     }
 
     modifier onlyOwner() {
@@ -67,30 +70,55 @@ contract GuessingGame is VRFConsumerBase {
         require(players.length >= RULES.minPlayers, "Not enough players.");
         uint256 target = ((sumGuesses() / players.length) * 66) / 100; // geändert von /3 * 2 wegen genauigkeit und rundung von solidity
 
-        uint256 minDiff = RULES.maxGuess;
+        uint256 minDiff = calcWinningDiff(RULES.maxGuess, target);
+        uint256 countWinners = getAmountOfWinners(minDiff, target, 0);
+        address[] memory possibleWinners = getPossibleWinners(
+            minDiff,
+            target,
+            countWinners
+        );
+        uint256 winnerIndex = randomNumbers[0] % (possibleWinners.length);
+        winner = possibleWinners[winnerIndex];
+        payout();
+    }
+
+    function getPossibleWinners(
+        uint256 minDiff,
+        uint256 target,
+        uint256 countWinners
+    ) private view returns (address[] memory) {
+        address[] memory possibleWinners = new address[](countWinners);
+        for (uint256 i = 0; i < players.length; i++) {
+            if (minDiff == absDiff(playersGuesses[players[i]], target)) {
+                possibleWinners[i] = players[i];
+            }
+        }
+        return possibleWinners;
+    }
+
+    function calcWinningDiff(
+        uint256 minDiff,
+        uint256 target
+    ) private view returns (uint256) {
         for (uint256 i = 0; i < players.length; i++) {
             if (absDiff(playersGuesses[players[i]], target) <= minDiff) {
                 minDiff = absDiff(playersGuesses[players[i]], target);
             }
         }
+        return minDiff;
+    }
 
-        uint256 count = 0;
+    function getAmountOfWinners(
+        uint256 minDiff,
+        uint256 target,
+        uint256 count
+    ) private view returns (uint256) {
         for (uint256 i = 0; i < players.length; i++) {
             if (minDiff == absDiff(playersGuesses[players[i]], target)) {
                 count++;
             }
         }
-
-        address[] memory winners = new address[](count);
-        for (uint256 i = 0; i < players.length; i++) {
-            if (minDiff == absDiff(playersGuesses[players[i]], target)) {
-                winners[i] = players[i];
-            }
-        }
-
-        uint256 winnerIndex = uint256(randomNumbers[0]) % (winners.length);
-        winner = winners[winnerIndex];
-        payout();
+        return count;
     }
 
     function absDiff(
@@ -138,11 +166,5 @@ contract GuessingGame is VRFConsumerBase {
         uint256 randomness
     ) internal override {
         randomNumbers[requestId] = randomness;
-    }
-
-    receive() external payable {
-        revert(
-            "This contract does not accept Ether, if you don't participate in the Game."
-        );
     }
 }
