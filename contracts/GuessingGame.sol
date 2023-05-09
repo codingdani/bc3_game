@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.18;
 
-import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
-
-contract GuessingGame is VRFConsumerBase {
+contract GuessingGame {
     struct Rules {
         uint256 minGuess;
         uint256 maxGuess;
@@ -21,13 +19,11 @@ contract GuessingGame is VRFConsumerBase {
     mapping(bytes32 => uint256) private randomNumbers;
 
     constructor(
-        address _vrfCoordinator,
-        address _linkToken,
         uint256 _minGuess,
         uint256 _maxGuess,
         uint256 _minPlayers,
         uint256 _entryFee
-    ) VRFConsumerBase(_vrfCoordinator, _linkToken) {
+    ) {
         owner = msg.sender;
         RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
     }
@@ -43,7 +39,14 @@ contract GuessingGame is VRFConsumerBase {
         _;
     }
 
-    // sieht okay für mich aus
+    function getPlayerCount() public view returns (uint256) {
+        return players.length;
+    }
+
+    function getMyGuess() public view returns (uint256) {
+        return playersGuesses[msg.sender];
+    }
+
     function enterGuess(uint256 _guess) public payable {
         require(msg.value == RULES.entryFee, "Insufficient entry fee.");
         require(
@@ -58,14 +61,6 @@ contract GuessingGame is VRFConsumerBase {
         playersGuesses[msg.sender] = _guess;
     }
 
-    function sumGuesses() private view returns (uint256) {
-        uint256 sum = 0;
-        for (uint256 i = 0; i < players.length; i++) {
-            sum = playersGuesses[players[i]];
-        }
-        return sum;
-    }
-
     function startGame() public onlyOwner {
         require(players.length >= RULES.minPlayers, "Not enough players.");
         uint256 target = ((sumGuesses() / players.length) * 66) / 100; // geändert von /3 * 2 wegen genauigkeit und rundung von solidity
@@ -77,9 +72,18 @@ contract GuessingGame is VRFConsumerBase {
             target,
             countWinners
         );
-        uint256 winnerIndex = randomNumbers[0] % (possibleWinners.length);
+        //uint256 winnerIndex = randomNumbers[0] % (possibleWinners.length);
+        uint256 winnerIndex = 123456789 % (possibleWinners.length);
         winner = possibleWinners[winnerIndex];
         payout();
+    }
+
+    function sumGuesses() private view returns (uint256) {
+        uint256 sum = 0;
+        for (uint256 i = 0; i < players.length; i++) {
+            sum = playersGuesses[players[i]];
+        }
+        return sum;
     }
 
     function getPossibleWinners(
@@ -133,38 +137,35 @@ contract GuessingGame is VRFConsumerBase {
     }
 
     function payout() private {
+        require(winner != address(0), "Winner has not been announced yet.");
         uint256 amount = address(this).balance;
         require(amount > 0, "No balance to payout.");
-        require(winner != address(0), "Winner has not been announced yet.");
         payable(winner).transfer(amount);
     }
 
-    function getPlayerCount() public view returns (uint256) {
-        return players.length;
-    }
+    // function requestRandomNumber() private returns (bytes32) {
+    //     require(
+    //         LINK.balanceOf(address(this)) >= 1,
+    //         "Not enough LINK to fulfill request"
+    //     );
+    //     bytes memory encodedSeed = abi.encodePacked(
+    //         block.timestamp,
+    //         block.number
+    //     );
+    //     bytes32 requestId = requestRandomness(bytes32(encodedSeed), 0);
+    //     randomNumbers[requestId] = 0;
+    //     return requestId;
+    // }
 
-    function getMyGuess() public view returns (uint256) {
-        return playersGuesses[msg.sender];
-    }
+    // function fulfillRandomness(
+    //     bytes32 requestId,
+    //     uint256 randomness
+    // ) internal override {
+    //     randomNumbers[requestId] = randomness;
+    // }
 
-    function requestRandomNumber() private returns (bytes32) {
-        require(
-            LINK.balanceOf(address(this)) >= 1,
-            "Not enough LINK to fulfill request"
-        );
-        bytes memory encodedSeed = abi.encodePacked(
-            block.timestamp,
-            block.number
-        );
-        bytes32 requestId = requestRandomness(bytes32(encodedSeed), 0);
-        randomNumbers[requestId] = 0;
-        return requestId;
-    }
-
-    function fulfillRandomness(
-        bytes32 requestId,
-        uint256 randomness
-    ) internal override {
-        randomNumbers[requestId] = randomness;
-    }
+    // function autoStart() private {
+    //     require(players.length >= RULES.minPlayers, "Not enough players.");
+    //     // start startGame if enterGuess
+    // }
 }
