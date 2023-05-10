@@ -3,8 +3,8 @@ import React from 'react'
 function CreateGame() {
     return (
         <>
-            <div className="layer">
-            </div>
+            <div className="layer"></div>
+            <button id="backbtn" className="btn">back</button>
             <h2>Enter the Rules</h2>
             <div className='containergrid'>
                 <div className="container1">

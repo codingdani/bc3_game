@@ -40,6 +40,11 @@ a {
   position: relative;
 }
 
+.flex {
+  display: flex;
+  align-items: center;
+}
+
 .layer {
   height: 100vh;
   width: 100vw;
@@ -80,16 +85,30 @@ h2 {
   top: 24%;
 }
 
+.containerh {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+}
+
 .container1,
 .container2,
 .container3,
 .container4 {
   display: flex;
   position: absolute;
-  justify-content: space-evenly;
-  align-items: space-between;
+  justify-content: center;
+  align-items: center;
   width: 100%;
 }
+
+.container1>*,
+.container2>*,
+.container3>*,
+.container4>* {
+  margin: 0 10px;
+}
+
 
 .container1 {
   top: 30%;
@@ -107,10 +126,8 @@ h2 {
   top: 60%;
 }
 
-.input[type=number] {}
-
 .btn {
-  border-radius: 5px;
+  border-radius: 10px;
   color: rgb(0, 0, 0);
   font-family: inherit;
   font-size: 1.3rem;
@@ -118,7 +135,7 @@ h2 {
   background-color: rgb(255, 254, 245);
   cursor: pointer;
   border: none;
-  box-shadow: 2px 2px 1px 1px rgb(195, 195, 195);
+  box-shadow: 1px 2px 1px 1px rgb(195, 195, 195);
   border: 1px solid rgb(195, 195, 195);
 }
 
@@ -153,6 +170,75 @@ h2 {
   position: absolute;
   font-size: 1.5rem;
   bottom: 10%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#backbtn {
+  position: absolute;
+  top: 3%;
+  left: 2%;
+}
+
+#eth_animation {
+  background-image: url('./gif/eth_white-256x256.png');
+  background-size: cover;
+  background-position: center;
+  height: 30px;
+  width: 30px;
+}
+
+#container_for_all_games {
+  position: absolute;
+  display: flex;
+  flex-wrap: wrap;
+  height: 60vh;
+  width: 100vw;
+  top: 20%;
+  left: 0%;
+  overflow: scroll;
+}
+
+.gamecontainer {
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 3%;
+  padding: 1% 1% 1% 1%;
+  background-color: black;
+  border: 1px solid white;
+  transition: 0.5s;
+  height: 140px;
+}
+
+.gamecontainer:hover {
+  transform: scale(1.1);
+  color: black;
+  background-color: white;
+}
+
+.gamecontainer>* {
+  padding: 2px 3px 5px 1px;
+}
+
+.enterfee {
+  display: flex;
+  flex-direction: column;
+}
+
+.enterfee>* {
+  margin: 10px;
+  padding: 5px;
+}
+
+.importantnr {
+  font-size: 1.7rem;
+  font-style: bold;
+}
+
+#countdown_status {
+  position: absolute;
+  font-size: 0.5rem;
+  bottom: 30%;
   left: 50%;
   transform: translate(-50%, -50%);
 }

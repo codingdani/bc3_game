@@ -1,6 +1,8 @@
 import React from 'react';
 import logo from './logo.svg';
 import CreateGame from './Screens/CreateGame';
+import CurrentOpenGames from './Screens/CurrentOpenGames';
+import EnterGame from './Screens/EnterGame';
 import HomeScreen from './Screens/HomeScreen';
 import StartGame from './Screens/StartGame';
 
