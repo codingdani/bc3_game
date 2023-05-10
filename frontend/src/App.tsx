@@ -22,7 +22,10 @@ function App() {
     if (typeof walletResponse.adress == 'string') {
       setStatus(walletResponse.status);
       setWallet(walletResponse.adress);
-    } else setStatus('please try again');
+    } else {
+      console.log('pls install metamask');
+      setStatus('please try again');
+    }
   };
 
   async function addWalletListener() {
