@@ -10,7 +10,7 @@ import { connectWallet, infuraKey } from "./utils/interact";
 
 function App() {
 
-  const [walletAddress, setWallet] = useState("");
+  const [walletAddress, setWallet] = useState<string>("");
   const [status, setStatus] = useState("");
   const [message, setMessage] = useState("No connection to the network."); //default message
   const [newMessage, setNewMessage] = useState("");

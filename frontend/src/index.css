@@ -33,7 +33,7 @@ a {
   background-color: black;
   background-image: url('./gif/eth_mirror.gif');
   background-repeat: no-repeat;
-  background-position: center center;
+  background-position: center bottom;
   border: 1px solid black;
   background-size: 900px;
   text-align: center;
@@ -62,7 +62,7 @@ a {
 
 h1 {
   position: absolute;
-  top: 20%;
+  top: 15%;
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 5rem;
@@ -148,14 +148,14 @@ h2 {
 
 #creategamebtn {
   position: absolute;
-  bottom: 20%;
-  left: 22%;
+  bottom: 15%;
+  left: 21%;
 }
 
 #searchforgamebtn {
   position: absolute;
-  bottom: 20%;
-  right: 22%;
+  bottom: 15%;
+  right: 21%;
 }
 
 #connectwalletbtn {
