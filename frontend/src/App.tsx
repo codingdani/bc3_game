@@ -6,25 +6,17 @@ import CurrentOpenGames from './Screens/CurrentOpenGames';
 import EnterGame from './Screens/EnterGame';
 import HomeScreen from './Screens/HomeScreen';
 import StartGame from './Screens/StartGame';
-import { connectWallet, infuraKey } from "./utils/interact";
+import { connectWallet, infuraKey, getCurrentWalletConnected } from "./utils/interact";
 
 
 function App() {
 
   const [walletAddress, setWallet] = useState<string>("");
-  const [status, setStatus] = useState("");
-  const [message, setMessage] = useState("No connection to the network."); //default message
-  const [newMessage, setNewMessage] = useState("");
-
 
   const connectWalletPressed = async () => {
     const walletResponse: any = await connectWallet();
     if (typeof walletResponse.adress == 'string') {
-      setStatus(walletResponse.status);
       setWallet(walletResponse.adress);
-    } else {
-      console.log('pls install metamask');
-      setStatus('please try again');
     }
   };
 
@@ -33,18 +25,21 @@ function App() {
       window.ethereum.on("accountsChanged", (accounts: any) => {
         if (accounts.length > 0) {
           setWallet(accounts[0]);
-          setStatus("👆🏽 Write a message in the text-field above.");
-        } else {
+        }
+        else {
           setWallet("");
-          setStatus("🦊 Connect to Metamask using the top right button.");
         }
       });
-    } else {
-      setStatus('You must install Metamask, a virtual Ethereum wallet, in your browser.')
     };
   }
 
+  async function fetchWallet() {
+    const { adress } = await getCurrentWalletConnected();
+    setWallet(adress);
+  }
+
   useEffect(() => {
+    fetchWallet();
     addWalletListener();
   }, []);
 
