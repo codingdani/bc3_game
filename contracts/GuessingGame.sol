@@ -18,13 +18,24 @@ contract GuessingGame {
 
     mapping(bytes32 => uint256) private randomNumbers;
 
-    constructor(
+    // constructor(
+    //     uint256 _minGuess,
+    //     uint256 _maxGuess,
+    //     uint256 _minPlayers,
+    //     uint256 _entryFee
+    // ) {
+    //     owner = msg.sender;
+    //     RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
+    // }
+
+    function init(
         uint256 _minGuess,
         uint256 _maxGuess,
         uint256 _minPlayers,
-        uint256 _entryFee
-    ) {
-        owner = msg.sender;
+        uint256 _entryFee,
+        address _owner
+    ) external {
+        owner = _owner;
         RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
     }
 

@@ -9,11 +9,10 @@ describe("GuessingGame", () => {
         const maxGuess = 100;
         const minPlayers = 3;
         const entryFee = ethers.utils.parseUnits("0.1", "ether"); // 0.1 eth
-
-        const guessingGame = await GuessingGame.deploy(minGuess, maxGuess, minPlayers, entryFee);
-
+        const guessingGame = await GuessingGame.deploy();
+        // const guessingGame = await GuessingGame.deploy(minGuess, maxGuess, minPlayers, entryFee);
+        await guessingGame.init(minGuess, maxGuess, minPlayers, entryFee, accounts[0].address);
         return { accounts, guessingGame };
-
     }
 
     describe("Enter Guess", () => {
