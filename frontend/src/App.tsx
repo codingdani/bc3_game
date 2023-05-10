@@ -1,3 +1,4 @@
+import { stringify } from 'querystring';
 import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import CreateGame from './Screens/CreateGame';
@@ -18,12 +19,30 @@ function App() {
 
   const connectWalletPressed = async () => {
     const walletResponse: any = await connectWallet();
-    setStatus(walletResponse.status);
-    setWallet(walletResponse.adress);
+    if (typeof walletResponse.adress == 'string') {
+      setStatus(walletResponse.status);
+      setWallet(walletResponse.adress);
+    } else setStatus('please try again');
   };
 
-  useEffect(() => {
+  async function addWalletListener() {
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts: any) => {
+        if (accounts.length > 0) {
+          setWallet(accounts[0]);
+          setStatus("👆🏽 Write a message in the text-field above.");
+        } else {
+          setWallet("");
+          setStatus("🦊 Connect to Metamask using the top right button.");
+        }
+      });
+    } else {
+      setStatus('You must install Metamask, a virtual Ethereum wallet, in your browser.')
+    };
+  }
 
+  useEffect(() => {
+    addWalletListener();
   }, []);
 
   return (
