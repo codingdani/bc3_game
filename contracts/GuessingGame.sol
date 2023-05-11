@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
+import "hardhat/console.sol";
+
 contract GuessingGame {
     struct Rules {
         uint256 minGuess;
@@ -9,24 +11,23 @@ contract GuessingGame {
         uint256 entryFee;
     }
 
+    struct Outcome {
+        uint256 key;
+        uint256 sum;
+        uint256 target;
+        uint256 randomNumber;
+        mapping(uint256 => address[]) possibleWinners;
+    }
+
+    Rules public RULES;
+    Outcome public outcome;
+
     mapping(address => uint256) private playersGuesses;
     address[] public players;
 
-    Rules public RULES;
     address public owner;
     address public winner;
-
-    mapping(bytes32 => uint256) private randomNumbers;
-
-    // constructor(
-    //     uint256 _minGuess,
-    //     uint256 _maxGuess,
-    //     uint256 _minPlayers,
-    //     uint256 _entryFee
-    // ) {
-    //     owner = msg.sender;
-    //     RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
-    // }
+    bool isInit = false;
 
     function init(
         uint256 _minGuess,
@@ -35,8 +36,10 @@ contract GuessingGame {
         uint256 _entryFee,
         address _owner
     ) external {
+        require(!isInit, "The game has already been initialized");
         owner = _owner;
         RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
+        isInit = true;
     }
 
     receive() external payable {
@@ -50,15 +53,15 @@ contract GuessingGame {
         _;
     }
 
-    function getPlayerCount() public view returns (uint256) {
+    function getPlayerCount() external view returns (uint256) {
         return players.length;
     }
 
-    function getMyGuess() public view returns (uint256) {
+    function getMyGuess() external view returns (uint256) {
         return playersGuesses[msg.sender];
     }
 
-    function enterGuess(uint256 _guess) public payable {
+    function enterGuess(uint256 _guess) external payable {
         require(msg.value == RULES.entryFee, "Insufficient entry fee.");
         require(
             _guess >= RULES.minGuess && _guess <= RULES.maxGuess,
@@ -72,10 +75,10 @@ contract GuessingGame {
         playersGuesses[msg.sender] = _guess;
     }
 
-    function startGame() public onlyOwner {
+    function startGame() external onlyOwner {
         require(players.length >= RULES.minPlayers, "Not enough players.");
-        uint256 target = ((sumGuesses() / players.length) * 66) / 100; // geändert von /3 * 2 wegen genauigkeit und rundung von solidity
-
+        uint256 sum = sumGuesses();
+        uint256 target = ((sum / players.length) * 66) / 100;
         uint256 minDiff = calcWinningDiff(RULES.maxGuess, target);
         uint256 countWinners = getAmountOfWinners(minDiff, target, 0);
         address[] memory possibleWinners = getPossibleWinners(
@@ -83,18 +86,30 @@ contract GuessingGame {
             target,
             countWinners
         );
-        //uint256 winnerIndex = randomNumbers[0] % (possibleWinners.length);
-        uint256 winnerIndex = 123456789 % (possibleWinners.length);
+        uint256 randomNumber = random();
+        uint256 winnerIndex = randomNumber % (possibleWinners.length);
         winner = possibleWinners[winnerIndex];
+
+        outcome.key = minDiff;
+        outcome.sum = sum;
+        outcome.target = target;
+        outcome.randomNumber = randomNumber;
+        outcome.possibleWinners[minDiff] = possibleWinners;
         payout();
     }
 
     function sumGuesses() private view returns (uint256) {
         uint256 sum = 0;
         for (uint256 i = 0; i < players.length; i++) {
-            sum = playersGuesses[players[i]];
+            sum += playersGuesses[players[i]];
         }
         return sum;
+    }
+
+    function outcomePossibleWinners(
+        uint256 key
+    ) public view returns (address[] memory) {
+        return outcome.possibleWinners[key];
     }
 
     function getPossibleWinners(
@@ -103,9 +118,11 @@ contract GuessingGame {
         uint256 countWinners
     ) private view returns (address[] memory) {
         address[] memory possibleWinners = new address[](countWinners);
+        uint256 amount = 0;
         for (uint256 i = 0; i < players.length; i++) {
             if (minDiff == absDiff(playersGuesses[players[i]], target)) {
-                possibleWinners[i] = players[i];
+                possibleWinners[amount] = players[i];
+                amount++;
             }
         }
         return possibleWinners;
@@ -154,6 +171,20 @@ contract GuessingGame {
         payable(winner).transfer(amount);
     }
 
+    // this is pseudo random generator, A miner can actually influence this
+    // it's better to use chainlink for that
+    function random() private view returns (uint) {
+        return
+            uint(
+                keccak256(
+                    abi.encodePacked(
+                        block.timestamp,
+                        block.prevrandao,
+                        block.number
+                    )
+                )
+            );
+    }
     // function requestRandomNumber() private returns (bytes32) {
     //     require(
     //         LINK.balanceOf(address(this)) >= 1,

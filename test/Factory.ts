@@ -27,9 +27,6 @@ describe("Factory", () => {
             const childAddress = await factory.children(0);
             const guessingGame = await ethers.getContractAt("GuessingGame", childAddress);
             expect(await guessingGame.owner()).to.be.equal(accounts[1].address);
-
-
-
         })
     })
 
