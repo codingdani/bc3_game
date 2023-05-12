@@ -141,6 +141,19 @@ describe("GuessingGame", () => {
             expect(await guessingGame.winner()).to.be.equal(winner);
 
         })
+
+        it("should prevent any player to reenter or gameMaster to restart the game", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            await guessingGame.connect(accounts[1]).enterGuess(70, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).enterGuess(2, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).enterGuess(3, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).enterGuess(50, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).enterGuess(90, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.startGame();
+
+            expect(guessingGame.connect(accounts[1]).enterGuess(70, { value: ethers.utils.parseUnits("0.1") })).to.be.revertedWith("Game already started");
+            await expect(guessingGame.startGame()).to.be.revertedWith("Game already started");
+        })
     })
 
 })

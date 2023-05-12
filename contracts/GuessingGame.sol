@@ -28,6 +28,7 @@ contract GuessingGame {
     address public owner;
     address public winner;
     bool isInit = false;
+    bool isStarted = false;
 
     function init(
         uint256 _minGuess,
@@ -62,6 +63,7 @@ contract GuessingGame {
     }
 
     function enterGuess(uint256 _guess) external payable {
+        require(!isStarted, "Game already started");
         require(msg.value == RULES.entryFee, "Insufficient entry fee.");
         require(
             _guess >= RULES.minGuess && _guess <= RULES.maxGuess,
@@ -76,6 +78,8 @@ contract GuessingGame {
     }
 
     function startGame() external onlyOwner {
+        require(!isStarted, "Game already started");
+        isStarted = true;
         require(players.length >= RULES.minPlayers, "Not enough players.");
         uint256 sum = sumGuesses();
         uint256 target = ((sum / players.length) * 66) / 100;
@@ -185,6 +189,7 @@ contract GuessingGame {
                 )
             );
     }
+
     // function requestRandomNumber() private returns (bytes32) {
     //     require(
     //         LINK.balanceOf(address(this)) >= 1,
@@ -210,4 +215,6 @@ contract GuessingGame {
     //     require(players.length >= RULES.minPlayers, "Not enough players.");
     //     // start startGame if enterGuess
     // }
+
+    // After a game is finished, enterGame and enterGuess should be restricted
 }
