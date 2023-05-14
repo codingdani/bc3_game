@@ -1,6 +1,7 @@
+import { stringify } from 'querystring';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllCurrentGames } from "../utils/interact";
+import { getAllCurrentGames, getGameDetails } from "../utils/interact";
 
 // interface TGame {
 //     name: string,
@@ -12,19 +13,32 @@ import { getAllCurrentGames } from "../utils/interact";
 
 function CurrentOpenGames() {
 
-    const [openGames, setOpenGames] = useState<string[]>([])
+    const [openGames, setOpenGames] = useState<string[]>([]);
+    const [openGamesDetails, setOpenGamesDetails] = useState([{}]);
+
     const getGameList = async () => {
         const currentGames = await getAllCurrentGames();
         setOpenGames(currentGames);
-    }
-
-    for (let i = 0; i < openGames.length; i++) {
-
-    }
+        for (let i = 0; i < openGames.length; i++) {
+            getGameDetails(openGames[i]).then((res) => {
+                console.log(res);
+                const rules = {
+                    name: openGames[i],
+                    entryFee: res.entryFee,
+                    maxGuess: res.maxGuess,
+                    minGuess: res.minGuess,
+                    minPlayers: res.minPlayers,
+                }
+                setOpenGamesDetails([...openGamesDetails, rules]);
+                console.log("open Game Details", openGamesDetails)
+            })
+        }
+    };
 
     useEffect(() => {
         getGameList()
     }, [])
+
     return (
         <>
             {openGames.length > 0 ? <h2>Currently open Games</h2> : null}
