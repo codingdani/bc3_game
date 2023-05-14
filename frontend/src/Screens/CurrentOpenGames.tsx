@@ -1,29 +1,45 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { getAllCurrentGames } from "../utils/interact";
+
+interface TGame {
+    name: string,
+    fee: number,
+    minGuess: number,
+    maxGuess: number,
+    players: number,
+}
 
 function CurrentOpenGames() {
+
+    const [openGames, setOpenGames] = useState<TGame[]>([])
+    const getGameList = async () => {
+        const currentGames = await getAllCurrentGames();
+        console.log(currentGames)
+        setOpenGames(currentGames);
+    }
+
+    useEffect(() => {
+        getGameList()
+    }, [])
     return (
         <>
-            <h2>Currently open Games</h2>
-            <button id="backbtn" className="btn">back</button>
+            {openGames.length > 0 ? <h2>Currently open Games</h2> : null}
+            <Link to="/" id="backbtn" className="btn">
+                back
+            </Link>
             <div id="container_for_all_games">
-                <div className="gamecontainer">
-                    <p>Name of Game</p>
-                    <p>Entry Fee: 1 ETH</p>
-                    <p>Guess between 0 - 500</p>
-                    <p>current Players: 4</p>
-                </div>
-                <div className="gamecontainer">
-                    <p>Name of Game</p>
-                    <p>Entry Fee: 5 ETH</p>
-                    <p>Guess between 0 - 1000</p>
-                    <p>current Players: 5</p>
-                </div>
-                <div className="gamecontainer">
-                    <p>Name of Game</p>
-                    <p>Entry Fee: 2 ETH</p>
-                    <p>Guess between 0 - 100</p>
-                    <p>current Players: 1</p>
-                </div>
+                {openGames.length > 0 ? (
+                    openGames.map((game) => (
+                        <Link to="/entergame" className="gamecontainer">
+                            <p>{game.name}</p>
+                            <p>Entry Fee: {game.fee}</p>
+                            <p>Guess between {game.minGuess} - {game.maxGuess}</p>
+                            <p>current Players: {game.players}</p>
+                        </Link>
+                    ))) : (
+                    <h2>no games here yet</h2>
+                )}
             </div>
         </>
     )

@@ -1,11 +1,12 @@
-import { stringify } from 'querystring';
 import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
+import { Route, Routes } from 'react-router-dom';
 import CreateGame from './Screens/CreateGame';
 import CurrentOpenGames from './Screens/CurrentOpenGames';
 import EnterGame from './Screens/EnterGame';
 import HomeScreen from './Screens/HomeScreen';
+import PlayingScreen from './Screens/PlayingScreen';
 import StartGame from './Screens/StartGame';
+import WinnerScreen from './Screens/WinnerScreen';
 import { connectWallet, infuraKey, getCurrentWalletConnected } from "./utils/interact";
 
 
@@ -44,6 +45,7 @@ function App() {
   }, []);
 
   return (
+
     <div className="App">
       <button id="connectwalletbtn" className="btn" onClick={connectWalletPressed}>
         {walletAddress.length > 0 ? (
@@ -55,7 +57,13 @@ function App() {
           <span>Connect Wallet</span>
         )}
       </button>
-      <HomeScreen></HomeScreen>
+      <Routes>
+        <Route path="/" element={<HomeScreen />} />
+        <Route path="/creategame" element={<CreateGame />} />
+        <Route path="/entergame" element={<EnterGame />} />
+        <Route path="/opengames" element={<CurrentOpenGames />} />
+        <Route path="/enteredgame" element={<PlayingScreen />} />
+      </Routes>
     </div>
   );
 }
