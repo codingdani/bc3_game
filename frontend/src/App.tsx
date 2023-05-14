@@ -60,7 +60,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/creategame" element={<CreateGame />} />
-        <Route path="/entergame" element={<EnterGame />} />
+        <Route path="/entergame/:adress" element={<EnterGame />} />
         <Route path="/opengames" element={<CurrentOpenGames />} />
         <Route path="/enteredgame" element={<PlayingScreen />} />
       </Routes>

@@ -56,6 +56,17 @@ export const createGame = async (
         }
     }
 }
+
+export const getGameDetails = async (adress: string = "0x051aB5b2f2e2fC179a6EdaA6B93342c64d8DE13A") => {
+    const contract = new web3.eth.Contract(
+        gameContractABI,
+        adress,
+    )
+    const contractRules = await contract.methods.RULES().call();
+    return contractRules;
+
+}
+
 //WALLET
 export const connectWallet = async () => {
     if (window.ethereum) {
