@@ -8,10 +8,10 @@ function EnterGame() {
 
     const [gameAdress, setGameAdress] = useState("");
     const [gameDetails, setGameDetails] = useState({
-        entryFee: 1,
-        maxGuess: 100,
+        entryFee: 0,
+        maxGuess: 0,
         minGuess: 0,
-        minPlayers: 3,
+        minPlayers: 0,
     })
     const callData = async (adress: string) => {
         const game = await getGameDetails(adress);
@@ -21,7 +21,6 @@ function EnterGame() {
             minGuess: game.minGuess,
             minPlayers: game.minPlayers
         })
-        console.log(gameDetails)
     }
     useEffect(() => {
         if (location.state.from) {

@@ -16,14 +16,18 @@ const factoryContract = new web3.eth.Contract(
     factoryContractABI,
     factoryAdress,
 );
-const gameContract = new web3.eth.Contract(
-    gameContractABI,
-    gameAdress,
-);
 
+const getAllGameMasters = async () => {
+    return await factoryContract.methods.getMasters().call();
+}
 export const getAllCurrentGames = async () => {
-    const allGames = await factoryContract.methods.getAllActiveGames("0xc8f34d80289943787513dfbFcc1Fe8A863ec39b3").call()
-    return allGames;
+    const allGameMasters: string[] = await getAllGameMasters();
+    const gameArray = []
+    for (let i = 0; i < allGameMasters.length; i++) {
+        const allGames = await factoryContract.methods.getAllActiveGames(allGameMasters[i]).call();
+        gameArray.push(...allGames);
+    }
+    return gameArray;
 }
 
 export const createGame = async (
@@ -57,7 +61,7 @@ export const createGame = async (
     }
 }
 
-export const getGameDetails = async (adress: string = "0x051aB5b2f2e2fC179a6EdaA6B93342c64d8DE13A") => {
+export const getGameDetails = async (adress: string) => {
     const contract = new web3.eth.Contract(
         gameContractABI,
         adress,

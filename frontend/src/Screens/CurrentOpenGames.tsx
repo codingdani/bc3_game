@@ -1,40 +1,46 @@
+import { setMaxIdleHTTPParsers } from 'http';
 import { stringify } from 'querystring';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllCurrentGames, getGameDetails } from "../utils/interact";
 
-// interface TGame {
-//     name: string,
-//     fee: number,
-//     minGuess: number,
-//     maxGuess: number,
-//     players: number,
-// }
+interface TGameDetails {
+    name: string,
+    entryFee: string,
+    minGuess: string,
+    maxGuess: string,
+    minPlayers: string,
+}
 
 function CurrentOpenGames() {
 
     const [openGames, setOpenGames] = useState<string[]>([]);
-    const [openGamesDetails, setOpenGamesDetails] = useState([{}]);
+    const [openGamesDetails, setOpenGamesDetails] = useState<TGameDetails[]>([]);
 
     const getGameList = async () => {
         const currentGames = await getAllCurrentGames();
         setOpenGames(currentGames);
-        for (let i = 0; i < openGames.length; i++) {
-            getGameDetails(openGames[i]).then((res) => {
-                console.log(res);
-                const rules = {
-                    name: openGames[i],
-                    entryFee: res.entryFee,
-                    maxGuess: res.maxGuess,
-                    minGuess: res.minGuess,
-                    minPlayers: res.minPlayers,
-                }
-                setOpenGamesDetails([...openGamesDetails, rules]);
-                console.log("open Game Details", openGamesDetails)
-            })
-        }
     };
 
+    const fetchGameRules = async (openGames: string[]) => {
+        const gameArray = []
+        for (let i = 0; i < openGames.length; i++) {
+            const res = await getGameDetails(openGames[i]);
+            const rules = {
+                name: openGames[i],
+                entryFee: res.entryFee,
+                maxGuess: res.maxGuess,
+                minGuess: res.minGuess,
+                minPlayers: res.minPlayers,
+            }
+            gameArray.push(rules);
+            setOpenGamesDetails(gameArray);
+        }
+    }
+
+    useEffect(() => {
+        fetchGameRules(openGames)
+    }, [openGames])
     useEffect(() => {
         getGameList()
     }, [])
@@ -46,13 +52,13 @@ function CurrentOpenGames() {
                 back
             </Link>
             <div id="container_for_all_games">
-                {openGames.length > 0 ? (
-                    openGames.map((game) => (
-                        <Link to={`/entergame/${game}`} className="gamecontainer" key={game} state={{ from: game }}>
-                            <p>{game}</p>
-                            {/* <p>Entry Fee: {game.fee}</p>
+                {openGamesDetails && openGamesDetails.length > 0 ? (
+                    openGamesDetails.map((game) => (
+                        <Link to={`/entergame/${game}`} className="gamecontainer" key={game.name} state={{ from: game.name }}>
+                            <p>{game.name}</p>
+                            <p>Entry Fee: {game.entryFee}</p>
                             <p>Guess between {game.minGuess} - {game.maxGuess}</p>
-                            <p>current Players: {game.players}</p> */}
+                            <p>current Players: {game.minPlayers}</p>
                         </Link>
                     ))) : (
                     <h2>no games here yet</h2>
