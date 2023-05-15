@@ -33,7 +33,7 @@ function CurrentOpenGames() {
                 minGuess: res.minGuess,
                 minPlayers: res.minPlayers,
             }
-            gameArray.push(rules);
+            gameArray.unshift(rules);
             setOpenGamesDetails(gameArray);
         }
     }
@@ -54,7 +54,7 @@ function CurrentOpenGames() {
             <div id="container_for_all_games">
                 {openGamesDetails && openGamesDetails.length > 0 ? (
                     openGamesDetails.map((game) => (
-                        <Link to={`/entergame/${game}`} className="gamecontainer" key={game.name} state={{ from: game.name }}>
+                        <Link to={`/entergame/${game.name}`} className="gamecontainer" key={game.name} state={{ from: game.name }}>
                             <p>{game.name}</p>
                             <p>Entry Fee: {game.entryFee}</p>
                             <p>Guess between {game.minGuess} - {game.maxGuess}</p>

@@ -61,6 +61,36 @@ export const createGame = async (
     }
 }
 
+const enterAGame = async (contract: string, wallet: string, guess: number) => {
+    if (!window.ethereum || wallet === null || wallet == undefined) {
+        return {
+            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
+        }
+    }
+    const gameContract = new web3.eth.Contract(
+        gameContractABI,
+        contract,
+    );
+    const transactionParams = {
+        to: contract,
+        from: wallet,
+        data: gameContract.methods.enterGuess(guess).encodeABI()
+    }
+    try {
+        const txHash = await window.ethereum.request({
+            method: "eth_sendTransaction",
+            params: [transactionParams]
+        })
+        return {
+            status: `transaction sent. View it under https://sepolia.etherscan.io/tx/${txHash}`
+        }
+    } catch (error: any) {
+        return {
+            status: "There was an Error: " + error.message
+        }
+    }
+}
+
 export const getGameDetails = async (adress: string) => {
     const contract = new web3.eth.Contract(
         gameContractABI,

@@ -12,7 +12,7 @@ import { connectWallet, infuraKey, getCurrentWalletConnected } from "./utils/int
 
 function App() {
 
-  const [walletAddress, setWallet] = useState<string>("");
+  const [walletAddress, setWallet] = useState<string>();
 
   const connectWalletPressed = async () => {
     const walletResponse: any = await connectWallet();
@@ -48,7 +48,7 @@ function App() {
 
     <div className="App">
       <button id="connectwalletbtn" className="btn" onClick={connectWalletPressed}>
-        {walletAddress.length > 0 ? (
+        {walletAddress && walletAddress.length > 0 ? (
           "Connected: " +
           String(walletAddress).substring(0, 6) +
           "..." +
