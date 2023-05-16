@@ -289,12 +289,19 @@ h2 {
 }
 
 #loading {
-  position: absolute;
+  position: relative;
   text-align: center;
-  height: 500px;
+  height: 650px;
   width: 100vw;
   background-color: black;
-  top: 50%;
+  top: 20%;
+  transform: translate(0, -50%);
+}
+
+#fetching {
+  position: absolute;
+  top: 10%;
+  left: 50%;
   transform: translate(0, -50%);
 }
 

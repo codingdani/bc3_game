@@ -64,7 +64,7 @@ function CurrentOpenGames() {
                     <div className="layer z_index">
                     </div>
                     <div id="loading" className="z_index">
-                        <p>fetching...</p>
+                        <p id="fetching">fetching...</p>
                         <img src={loadingpng} id="loadinggif"></img>
                     </div>
                 </>

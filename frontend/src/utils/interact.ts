@@ -70,6 +70,7 @@ export const enterAGame = async (contract: string, wallet: string, guess: number
     )
     const gameRules = await gameContract.methods.RULES().call();
     const transactionParams = {
+        fee: 21000,
         to: contract,
         from: wallet,
         data: gameContract.methods.enterGuess(guess).encodeABI(),
