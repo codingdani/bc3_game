@@ -31,7 +31,10 @@ function CreateGame() {
     const changePlayerCount = ({ target }: any) => {
         setMinPlayerCount(target.value)
     }
-    const submitForm = () => createGame(walletAdress, minGuess, maxGuess, minPlayerCount, entryFee)
+    const submitForm = () => {
+        createGame(walletAdress, minGuess, maxGuess, minPlayerCount, entryFee)
+    }
+
     return (
         <>
             <div className="layer"></div>

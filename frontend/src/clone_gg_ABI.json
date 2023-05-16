@@ -1,0 +1,205 @@
+[
+    {
+        "inputs": [],
+        "name": "RULES",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "minGuess",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "maxGuess",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minPlayers",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "entryFee",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_guess",
+                "type": "uint256"
+            }
+        ],
+        "name": "enterGuess",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getMyGuess",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getPlayerCount",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_minGuess",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_maxGuess",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_minPlayers",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_entryFee",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "_owner",
+                "type": "address"
+            }
+        ],
+        "name": "init",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "outcome",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "key",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "sum",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "target",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "randomNumber",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "key",
+                "type": "uint256"
+            }
+        ],
+        "name": "outcomePossibleWinners",
+        "outputs": [
+            {
+                "internalType": "address[]",
+                "name": "",
+                "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "players",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "startGame",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "winner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "stateMutability": "payable",
+        "type": "receive"
+    }
+]

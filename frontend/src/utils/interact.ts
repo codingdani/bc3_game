@@ -3,7 +3,6 @@ const gameContractABI = require('../guessing_game_abi.json');
 const factoryContractABI = require('../factory_abi.json');
 
 const factoryAdress: string = "0xFDB5BAe7AB7e73214355e38cFe99318b0900eDeC";
-const gameAdress: string = "0xD4F04D3433E06fD64452D667984a7A4bF16224bF";
 
 const Web3 = require('web3');
 
@@ -36,7 +35,7 @@ export const createGame = async (
     maxGuess: number,
     playerCount: number,
     fee: number) => {
-    if (!window.ethereum || adress === null || adress == undefined) {
+    if (!window.ethereum || adress === null || adress === undefined) {
         return {
             status: "💡 Connect your Metamask wallet to update the message on the blockchain."
         }
@@ -62,7 +61,7 @@ export const createGame = async (
 }
 
 export const enterAGame = async (contract: string, wallet: string, guess: number) => {
-    if (!window.ethereum || wallet === null || wallet == undefined) {
+    if (!window.ethereum || wallet === null || wallet === undefined) {
         return {
             status: "💡 Connect your Metamask wallet to update the message on the blockchain."
         }
@@ -71,12 +70,15 @@ export const enterAGame = async (contract: string, wallet: string, guess: number
         gameContractABI,
         contract,
     )
+    const gameRules = await gameContract.methods.RULES().call();
+
     const transactionParams = {
-        to: gameContract,
+        to: contract,
         from: wallet,
         data: gameContract.methods.enterGuess(guess).encodeABI(),
+        value: web3.utils.toWei(gameRules.entryFee.toString(), 'ether'),
     }
-    console.log("transaction Data", transactionParams);
+    console.log(transactionParams);
     try {
         const txHash = await window.ethereum.request({
             method: "eth_sendTransaction",

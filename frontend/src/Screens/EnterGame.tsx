@@ -48,6 +48,7 @@ function EnterGame() {
 
     const submitGuess = () => {
         if (guess > Number(gameDetails?.maxGuess) || guess < Number(gameDetails?.minGuess)) {
+            console.log("fail")
             return {
                 status: "Invalid Guess."
             }
@@ -57,6 +58,7 @@ function EnterGame() {
                 status: "Transaction went through."
             }
         } else {
+            console.log("fail")
             return {
                 status: "There was a mistake",
             }
