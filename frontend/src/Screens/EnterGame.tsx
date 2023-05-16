@@ -73,27 +73,27 @@ function EnterGame() {
             </Link>
             {gameDetails ? (
                 <>
-                    <h2>Name of Game</h2>
+                    <h2>66% of Intersection</h2>
                     <div className="details">
                         <p>Contract Adress:{gameAdress} </p>
                         <a href={`https=//sepolia.etherscan.io/adress/${gameAdress}`} target="_blank">show on Etherscan</a>
                     </div>
                     <div className="enterfee">
                         <p>You play against multiple other Players. (min. {gameDetails.minPlayers}) </p>
-                        <p>You all enter a guess between {gameDetails.minGuess} and {gameDetails.maxGuess}.</p>
+                        <p>You all enter a guess between <span className="importantnr">{gameDetails.minGuess}</span> - <span className="importantnr">{gameDetails.maxGuess}</span>.</p>
                         <p>The person with the closest guess to <br /> <b>66.6% of the intersection of all guesses</b><br /> wins the price.</p>
                         <br />
-                        <h3>Enter Your Guess: <br />{gameDetails.minGuess} - {gameDetails.maxGuess}</h3>
+                        <h3>Enter Your Guess: </h3>
                         <form className="form-group">
                             <input type="number" id="input" className="form-input" onChange={changeGuess} />
                         </form>
                         <div className="flex">
-                            <h3>Fee: </h3>
+                            <h3 className='margin'>Entry Fee: </h3>
                             <span className='importantnr'> {gameDetails.entryFee}</span>
                             <div id="eth_logo"></div>
                         </div>
+                        <button className="btn" onClick={submitGuess}>Play</button>
                     </div>
-                    <button id="startbtn" className="btn" onClick={submitGuess}>Enter Game</button>
                 </>) : null}
         </>
     )

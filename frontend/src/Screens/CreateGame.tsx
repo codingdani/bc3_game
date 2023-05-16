@@ -32,7 +32,11 @@ function CreateGame() {
         setMinPlayerCount(target.value)
     }
     const submitForm = () => {
-        createGame(walletAdress, minGuess, maxGuess, minPlayerCount, entryFee)
+        if (walletAdress.length > 0 && maxGuess > 0 && minPlayerCount > 0 && entryFee >= 1) {
+            createGame(walletAdress, minGuess, maxGuess, minPlayerCount, entryFee)
+        } else {
+            console.log("Pls fill the information");
+        }
     }
 
     return (
@@ -42,24 +46,24 @@ function CreateGame() {
                 <button id="backbtn" className="btn">back</button>
             </Link>
             <h2>Enter the Rules</h2>
-            <div className='containergrid'>
-                <div className="container1">
-                    <p>min number of Players: </p>
-                    <input type={"number"} placeholder="Players" min={2} max={10} onChange={changePlayerCount}></input>
-                </div>
-                <div className='container2'>
-                    <p>Range of Guess: </p>
+            <div className="container1">
+                <p>min number of Players: </p>
+                <input type={"number"} placeholder="Players" min={2} max={10} onChange={changePlayerCount}></input>
+            </div>
+            <div className='container2'>
+                <p>Range of Guess: </p>
+                <div className="flex column">
                     <input type={"number"} placeholder="min" onChange={changeMinGuess}></input>
                     <input type={"number"} placeholder="max" onChange={changeMaxGuess}></input>
                 </div>
-                <div className='container3'>
-                    <p>Entry Fee: </p>
-                    <input type={"number"} placeholder="Entry Fee" onChange={changeEntryFee}></input>
-                </div>
-                <div className='container4'>
-                    <p>Enter a Name: </p>
-                    <input type={"text"} placeholder="Name" onChange={(e) => setName(e.target.value)}></input>
-                </div>
+            </div>
+            <div className='container3'>
+                <p>Entry Fee: </p>
+                <input type={"number"} placeholder="Entry Fee" onChange={changeEntryFee}></input>
+            </div>
+            <div className='container4'>
+                <p>Enter a Name: </p>
+                <input type={"text"} placeholder="Name" onChange={(e) => setName(e.target.value)}></input>
             </div>
             <button id="startbtn" className="btn" onClick={() => submitForm()}>Create Game</button>
         </>

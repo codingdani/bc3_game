@@ -1,13 +1,11 @@
-export const infuraKey = "b6b652a41f604aadb527654f04bed96c";
+const infuraKey = "b6b652a41f604aadb527654f04bed96c";
 const gameContractABI = require('../guessing_game_abi.json');
 const factoryContractABI = require('../factory_abi.json');
-
 const factoryAdress: string = "0xFDB5BAe7AB7e73214355e38cFe99318b0900eDeC";
 
 const Web3 = require('web3');
-
 const web3 = new Web3(
-    new Web3.providers.HttpProvider('https://sepolia.infura.io/v3/b6b652a41f604aadb527654f04bed96c')
+    new Web3.providers.HttpProvider(`https://sepolia.infura.io/v3/${infuraKey}`)
 );
 
 //CONTRACTS
@@ -71,14 +69,12 @@ export const enterAGame = async (contract: string, wallet: string, guess: number
         contract,
     )
     const gameRules = await gameContract.methods.RULES().call();
-
     const transactionParams = {
         to: contract,
         from: wallet,
         data: gameContract.methods.enterGuess(guess).encodeABI(),
         value: web3.utils.toHex(web3.utils.toWei(gameRules.entryFee.toString(), 'ether')),
     }
-    console.log(transactionParams);
     try {
         const txHash = await window.ethereum.request({
             method: "eth_sendTransaction",
@@ -101,7 +97,15 @@ export const getGameDetails = async (adress: string) => {
     )
     const contractRules = await contract.methods.RULES().call();
     return contractRules;
+}
 
+export const getCurrentPlayerCount = async (adress: string) => {
+    const contract = new web3.eth.Contract(
+        gameContractABI,
+        adress,
+    )
+    const currentPlayerCount = await contract.methods.getPlayerCount().call();
+    return currentPlayerCount;
 }
 
 //WALLET
