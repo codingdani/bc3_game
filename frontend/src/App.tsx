@@ -7,7 +7,7 @@ import HomeScreen from './Screens/HomeScreen';
 import PlayingScreen from './Screens/PlayingScreen';
 import StartGame from './Screens/StartGame';
 import WinnerScreen from './Screens/WinnerScreen';
-import { connectWallet, infuraKey, getCurrentWalletConnected } from "./utils/interact";
+import { connectWallet, getCurrentWalletConnected } from "./utils/interact";
 
 
 function App() {
@@ -62,7 +62,7 @@ function App() {
         <Route path="/creategame" element={<CreateGame />} />
         <Route path="/entergame/:adress" element={<EnterGame />} />
         <Route path="/opengames" element={<CurrentOpenGames />} />
-        <Route path="/enteredgame" element={<PlayingScreen />} />
+        <Route path="/enteredgame/:adress" element={<PlayingScreen />} />
       </Routes>
     </div>
   );

@@ -61,21 +61,22 @@ export const createGame = async (
     }
 }
 
-const enterAGame = async (contract: string, wallet: string, guess: number) => {
+export const enterAGame = async (contract: string, wallet: string, guess: number) => {
     if (!window.ethereum || wallet === null || wallet == undefined) {
         return {
             status: "💡 Connect your Metamask wallet to update the message on the blockchain."
         }
     }
-    const gameContract = new web3.eth.Contract(
+    const gameContract = await new web3.eth.Contract(
         gameContractABI,
         contract,
-    );
+    )
     const transactionParams = {
-        to: contract,
+        to: gameContract,
         from: wallet,
-        data: gameContract.methods.enterGuess(guess).encodeABI()
+        data: gameContract.methods.enterGuess(guess).encodeABI(),
     }
+    console.log("transaction Data", transactionParams);
     try {
         const txHash = await window.ethereum.request({
             method: "eth_sendTransaction",

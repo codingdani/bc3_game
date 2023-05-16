@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { getGameDetails } from '../utils/interact';
+import { enterAGame, getCurrentWalletConnected, getGameDetails } from '../utils/interact';
 
 interface TGameDetails {
     entryFee: string,
@@ -12,6 +12,7 @@ function EnterGame() {
 
     const location = useLocation();
 
+    const [walletAdress, setWalletAdress] = useState("")
     const [gameAdress, setGameAdress] = useState("");
     const [gameDetails, setGameDetails] = useState<TGameDetails>()
     const [guess, setGuess] = useState<number>(0);
@@ -31,6 +32,36 @@ function EnterGame() {
             setGameAdress(location.state.from);
         }
     }, [location])
+
+    useEffect(() => {
+        async function fetchWallet() {
+            const { adress } = await getCurrentWalletConnected();
+            setWalletAdress(adress);
+        }
+        fetchWallet()
+    }, []);
+
+    const changeGuess = ({ target }: any) => {
+        setGuess(target.value)
+        console.log(guess);
+    }
+
+    const submitGuess = () => {
+        if (guess > Number(gameDetails?.maxGuess) || guess < Number(gameDetails?.minGuess)) {
+            return {
+                status: "Invalid Guess."
+            }
+        } else if (guess && walletAdress.length > 0) {
+            enterAGame(gameAdress, walletAdress, guess);
+            return {
+                status: "Transaction went through."
+            }
+        } else {
+            return {
+                status: "There was a mistake",
+            }
+        }
+    }
 
     return (
         <>
@@ -52,7 +83,7 @@ function EnterGame() {
                         <br />
                         <h3>Enter Your Guess: <br />{gameDetails.minGuess} - {gameDetails.maxGuess}</h3>
                         <form className="form-group">
-                            <input type="number" id="input" className="form-input" />
+                            <input type="number" id="input" className="form-input" onChange={changeGuess} />
                         </form>
                         <div className="flex">
                             <h3>Fee: </h3>
@@ -60,7 +91,7 @@ function EnterGame() {
                             <div id="eth_logo"></div>
                         </div>
                     </div>
-                    <button id="startbtn" className="btn">Enter Game</button>
+                    <button id="startbtn" className="btn" onClick={submitGuess}>Enter Game</button>
                 </>) : null}
         </>
     )

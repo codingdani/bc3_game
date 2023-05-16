@@ -1,6 +1,4 @@
-import { setMaxIdleHTTPParsers } from 'http';
-import { stringify } from 'querystring';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllCurrentGames, getGameDetails } from "../utils/interact";
 
@@ -17,31 +15,34 @@ function CurrentOpenGames() {
     const [openGames, setOpenGames] = useState<string[]>([]);
     const [openGamesDetails, setOpenGamesDetails] = useState<TGameDetails[]>([]);
 
-    const getGameList = async () => {
-        const currentGames = await getAllCurrentGames();
-        setOpenGames(currentGames);
-    };
-
-    const fetchGameRules = async (openGames: string[]) => {
-        const gameArray = []
-        for (let i = 0; i < openGames.length; i++) {
-            const res = await getGameDetails(openGames[i]);
-            const rules = {
-                name: openGames[i],
-                entryFee: res.entryFee,
-                maxGuess: res.maxGuess,
-                minGuess: res.minGuess,
-                minPlayers: res.minPlayers,
+    useEffect(() => {
+        const fetchGameRules = async (openGames: string[]) => {
+            const gameArray: TGameDetails[] = []
+            for (let i = 0; i < openGames.length; i++) {
+                const res = await getGameDetails(openGames[i])
+                    .then((res) => {
+                        const rules = {
+                            name: openGames[i],
+                            entryFee: res.entryFee,
+                            maxGuess: res.maxGuess,
+                            minGuess: res.minGuess,
+                            minPlayers: res.minPlayers,
+                        }
+                        gameArray.push(rules);
+                        setOpenGamesDetails(gameArray);
+                        console.log(`iteration: ${i}`, gameArray)
+                    })
             }
-            gameArray.unshift(rules);
-            setOpenGamesDetails(gameArray);
         }
-    }
+        fetchGameRules(openGames);
+    }, [openGames])
 
     useEffect(() => {
-        fetchGameRules(openGames)
-    }, [openGames])
-    useEffect(() => {
+        const getGameList = async () => {
+            const currentGames = await getAllCurrentGames();
+            setOpenGames(currentGames);
+            console.log("set Game String Array", currentGames)
+        };
         getGameList()
     }, [])
 
@@ -67,5 +68,6 @@ function CurrentOpenGames() {
         </>
     )
 }
+
 
 export default CurrentOpenGames
