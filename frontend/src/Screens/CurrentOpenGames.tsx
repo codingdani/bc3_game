@@ -18,6 +18,7 @@ function CurrentOpenGames() {
     useEffect(() => {
         const fetchGameRules = async (openGames: string[]) => {
             const gameArray: TGameDetails[] = []
+            // implement a for await for async iteration
             for (let i = 0; i < openGames.length; i++) {
                 const res = await getGameDetails(openGames[i])
                     .then((res) => {

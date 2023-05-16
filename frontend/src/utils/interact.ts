@@ -76,7 +76,7 @@ export const enterAGame = async (contract: string, wallet: string, guess: number
         to: contract,
         from: wallet,
         data: gameContract.methods.enterGuess(guess).encodeABI(),
-        value: web3.utils.toWei(gameRules.entryFee.toString(), 'ether'),
+        value: web3.utils.toHex(web3.utils.toWei(gameRules.entryFee.toString(), 'ether')),
     }
     console.log(transactionParams);
     try {
