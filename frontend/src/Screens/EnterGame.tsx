@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { enterAGame, getCurrentWalletConnected, getGameDetails } from '../utils/interact';
+import { enterAGame, getCurrentPlayerCount, getCurrentWalletConnected, getGameDetails } from '../utils/interact';
 
 interface TGameDetails {
     entryFee: string,
@@ -16,6 +16,7 @@ function EnterGame() {
     const [gameAdress, setGameAdress] = useState("");
     const [gameDetails, setGameDetails] = useState<TGameDetails>()
     const [guess, setGuess] = useState<number>(0);
+    const [pCount, setPCount] = useState<number>();
 
     const callData = async (adress: string) => {
         const game = await getGameDetails(adress);
@@ -30,8 +31,15 @@ function EnterGame() {
         if (location.state.from) {
             callData(location.state.from);
             setGameAdress(location.state.from);
+            const fetchCurrentPlayerCount = async () => {
+                const count = await getCurrentPlayerCount(location.state.from);
+                setPCount(count);
+            }
+            fetchCurrentPlayerCount();
         }
     }, [location])
+
+
 
     useEffect(() => {
         async function fetchWallet() {
@@ -79,16 +87,17 @@ function EnterGame() {
                         <a href={`https=//sepolia.etherscan.io/adress/${gameAdress}`} target="_blank">show on Etherscan</a>
                     </div>
                     <div className="enterfee">
+                        <p>current players: <span className="importantnr">{pCount}</span></p>
                         <p>You play against multiple other Players. (min. {gameDetails.minPlayers}) </p>
                         <p>You all enter a guess between <span className="importantnr">{gameDetails.minGuess}</span> - <span className="importantnr">{gameDetails.maxGuess}</span>.</p>
                         <p>The person with the closest guess to <br /> <b>66.6% of the intersection of all guesses</b><br /> wins the price.</p>
                         <br />
-                        <h3>Enter Your Guess: </h3>
+                        <h3>enter your guess: </h3>
                         <form className="form-group">
                             <input type="number" id="input" className="form-input" onChange={changeGuess} />
                         </form>
                         <div className="flex">
-                            <h3 className='margin'>Entry Fee: </h3>
+                            <h3 className='margin'>entry fee: </h3>
                             <span className='importantnr'> {gameDetails.entryFee}</span>
                             <div id="eth_logo"></div>
                         </div>

@@ -45,27 +45,21 @@ function CreateGame() {
             <Link to="/">
                 <button id="backbtn" className="btn">back</button>
             </Link>
-            <h2>Enter the Rules</h2>
-            <div className="container1">
+            <h2>Enter your Rules</h2>
+            <div className="enterfee">
                 <p>min number of Players: </p>
                 <input type={"number"} placeholder="Players" min={2} max={10} onChange={changePlayerCount}></input>
-            </div>
-            <div className='container2'>
                 <p>Range of Guess: </p>
                 <div className="flex column">
                     <input type={"number"} placeholder="min" onChange={changeMinGuess}></input>
                     <input type={"number"} placeholder="max" onChange={changeMaxGuess}></input>
                 </div>
-            </div>
-            <div className='container3'>
                 <p>Entry Fee: </p>
                 <input type={"number"} placeholder="Entry Fee" onChange={changeEntryFee}></input>
-            </div>
-            <div className='container4'>
                 <p>Enter a Name: </p>
                 <input type={"text"} placeholder="Name" onChange={(e) => setName(e.target.value)}></input>
+                <button id="startbtn" className="btn" onClick={() => submitForm()}>Create Game</button>
             </div>
-            <button id="startbtn" className="btn" onClick={() => submitForm()}>Create Game</button>
         </>
     )
 }

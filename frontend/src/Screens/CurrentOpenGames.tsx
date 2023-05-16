@@ -20,14 +20,6 @@ function CurrentOpenGames() {
 
     useEffect(() => {
         setLoading(true);
-        const fetchCurrentPlayerCount = async (openGames: string[]) => {
-            const currentPlayerCount = 0
-            for (let i = 0; i < openGamesDetails.length; i++) {
-                const count = await getCurrentPlayerCount(openGamesDetails[i].name).then((count) => {
-
-                })
-            }
-        }
         const fetchGameRules = async (openGames: string[]) => {
             const gameArray: TGameDetails[] = []
             // implement a for await for async iteration
@@ -47,6 +39,7 @@ function CurrentOpenGames() {
             }
             setTimeout(() => setLoading(false), 2000);
         }
+
         fetchGameRules(openGames);
     }, [openGames])
 
@@ -81,9 +74,8 @@ function CurrentOpenGames() {
                     openGamesDetails.map((game) => (
                         <Link to={`/entergame/${game.name}`} className="gamecontainer" key={game.name} state={{ from: game.name }}>
                             <p>{game.name}</p>
-                            <p>Entry Fee: <span className="importantnr">{game.entryFee}</span></p>
-                            <p>Guess between <span className="importantnr">{game.minGuess}</span> - <span className="importantnr">{game.maxGuess}</span></p>
-                            <p>current Players: <span className="importantnr">{game.minPlayers}</span></p>
+                            <p>entry Fee: <span className="importantnr">{game.entryFee}</span></p>
+                            <p>intersection between <span className="importantnr">{game.minGuess}</span> - <span className="importantnr">{game.maxGuess}</span></p>
                         </Link>
                     ))) : (
                     <p className="centered">no games here yet</p>
