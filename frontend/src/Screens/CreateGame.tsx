@@ -47,7 +47,7 @@ function CreateGame() {
             </Link>
             <h2>Enter your Rules</h2>
             <div className="enterfee">
-                <p>min number of Players: </p>
+                <p>min. number of Players: </p>
                 <input type={"number"} placeholder="Players" min={2} max={10} onChange={changePlayerCount}></input>
                 <p>Range of Guess: </p>
                 <div className="flex column">

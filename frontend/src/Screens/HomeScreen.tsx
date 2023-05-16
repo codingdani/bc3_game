@@ -6,6 +6,7 @@ function HomeScreen() {
     return (
         <>
             <h1>King of Diamonds</h1>
+            <p id="winnertext">the winner takes it all</p>
             <Link to="/creategame"><button id="creategamebtn" className="btn">Create Game</button></Link>
             <Link to="/opengames"><button id="searchforgamebtn" className="btn">Scout Games</button></Link>
         </>
