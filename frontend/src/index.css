@@ -43,6 +43,7 @@ input {
   width: 150px;
   font-style: bold;
   text-align: center;
+  border-radius: 5px;
 }
 
 .App {
@@ -86,8 +87,6 @@ input {
   font-size: 0.8rem;
   position: absolute;
   top: 20%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 
 h1 {
@@ -162,6 +161,7 @@ h2 {
 
 .btn,
 .enterfee>.btn {
+  all: unset;
   border-radius: 10px;
   color: rgb(0, 0, 0);
   font-family: inherit;
@@ -229,7 +229,6 @@ h2 {
   height: 65vh;
   width: 100vw;
   top: 25%;
-  left: 0%;
   overflow: scroll;
 }
 
@@ -239,9 +238,10 @@ h2 {
   margin: 2% 3%;
   padding: 1% 1% 1% 1%;
   background-color: black;
-  border: 1px solid white;
+  border: 1px solid rgb(181, 167, 2);
   transition: 0.4s;
   height: 150px;
+  width: 400px;
 }
 
 .gamecontainer:hover {
@@ -257,9 +257,7 @@ h2 {
 }
 
 .enterfee {
-  position: absolute;
-  top: 55%;
-  transform: translate(0, -50%);
+  margin-bottom: 5%;
   padding: 1% 3%;
   display: flex;
   align-items: center;
@@ -291,22 +289,20 @@ h2 {
 #loading {
   position: relative;
   text-align: center;
-  height: 650px;
+  height: 100vh;
   width: 100vw;
   background-color: black;
-  top: 20%;
-  transform: translate(0, -50%);
 }
 
 #fetching {
   position: absolute;
-  top: 10%;
+  top: 8%;
   left: 50%;
   transform: translate(0, -50%);
 }
 
 #loadinggif {
-  height: 100%;
+  height: 80%;
 }
 
 .z_index {

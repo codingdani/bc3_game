@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllCurrentGames, getCurrentPlayerCount, getGameDetails } from "../utils/interact";
+import { getAllCurrentGames, getGameDetails } from "../utils/interact";
 import loadingpng from "../gif/Blockchaingif.gif"
 
 interface TGameDetails {
@@ -9,14 +9,13 @@ interface TGameDetails {
     minGuess: string,
     maxGuess: string,
     minPlayers: string,
-    currentPlayers?: number,
 }
 
 function CurrentOpenGames() {
 
     const [openGames, setOpenGames] = useState<string[]>([]);
     const [openGamesDetails, setOpenGamesDetails] = useState<TGameDetails[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
         setLoading(true);
@@ -39,7 +38,6 @@ function CurrentOpenGames() {
             }
             setTimeout(() => setLoading(false), 2000);
         }
-
         fetchGameRules(openGames);
     }, [openGames])
 
@@ -48,7 +46,6 @@ function CurrentOpenGames() {
             setLoading(true);
             const currentGames = await getAllCurrentGames();
             setOpenGames(currentGames);
-            console.log("set Game String Array", currentGames)
         };
         getGameList()
     }, [])
@@ -73,12 +70,15 @@ function CurrentOpenGames() {
                 {openGamesDetails && openGamesDetails.length > 0 ? (
                     openGamesDetails.map((game) => (
                         <Link to={`/entergame/${game.name}`} className="gamecontainer" key={game.name} state={{ from: game.name }}>
-                            <p>{game.name}</p>
+                            <p>{String(game.name).substring(0, 6) + "..." + String(game.name).substring(38)}</p>
                             <p>entry Fee: <span className="importantnr">{game.entryFee}</span></p>
                             <p>intersection between <span className="importantnr">{game.minGuess}</span> - <span className="importantnr">{game.maxGuess}</span></p>
                         </Link>
                     ))) : (
-                    <p className="centered">no games here yet</p>
+                    <div className="flex column">
+                        <h2>no games here yet</h2>
+                        <Link to="/creategame" className="btn">create a game</Link>
+                    </div>
                 )}
             </div>
         </>

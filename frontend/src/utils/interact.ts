@@ -41,7 +41,7 @@ export const createGame = async (
     const transactionParams = {
         to: factoryAdress,
         from: adress,
-        data: factoryContract.methods.createGame(minGuess, maxGuess, playerCount, fee).encodeABI(),
+        data: factoryContract.methods.createGame(minGuess, maxGuess, playerCount, web3.utils.toWei(fee.toString(), "ether")).encodeABI(),
     }
     try {
         const txHash = await window.ethereum.request({
@@ -70,11 +70,10 @@ export const enterAGame = async (contract: string, wallet: string, guess: number
     )
     const gameRules = await gameContract.methods.RULES().call();
     const transactionParams = {
-        fee: 21000,
         to: contract,
         from: wallet,
         data: gameContract.methods.enterGuess(guess).encodeABI(),
-        value: web3.utils.toHex(web3.utils.toWei(gameRules.entryFee.toString(), 'ether')),
+        value: web3.utils.toHex(gameRules.entryFee.toString()),
     }
     try {
         const txHash = await window.ethereum.request({
@@ -97,6 +96,8 @@ export const getGameDetails = async (adress: string) => {
         adress,
     )
     const contractRules = await contract.methods.RULES().call();
+    const entryFeeToWei = web3.utils.fromWei(contractRules.entryFee.toString(), "ether");
+    contractRules.entryFee = entryFeeToWei
     return contractRules;
 }
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import Web3 from 'web3';
 import { createGame, getCurrentWalletConnected } from "../utils/interact";
 
 function CreateGame() {
@@ -26,16 +27,20 @@ function CreateGame() {
         setMaxGuess(target.value)
     }
     const changeEntryFee = ({ target }: any) => {
-        setEntryFee(target.value)
+        setEntryFee(target.value);
     }
     const changePlayerCount = ({ target }: any) => {
         setMinPlayerCount(target.value)
     }
     const submitForm = () => {
-        if (walletAdress.length > 0 && maxGuess > 0 && minPlayerCount > 0 && entryFee >= 1) {
+        if (walletAdress.length > 0 &&
+            maxGuess > 0 &&
+            minPlayerCount > 0 &&
+            entryFee >= 0 &&
+            minGuess < maxGuess) {
             createGame(walletAdress, minGuess, maxGuess, minPlayerCount, entryFee)
         } else {
-            console.log("Pls fill the information");
+            console.log("Pls fill the information correctly");
         }
     }
 
@@ -55,10 +60,11 @@ function CreateGame() {
                     <input type={"number"} placeholder="max" onChange={changeMaxGuess}></input>
                 </div>
                 <p>Entry Fee: </p>
+                <p>Ether Logo</p>
                 <input type={"number"} placeholder="Entry Fee" onChange={changeEntryFee}></input>
                 <p>Enter a Name: </p>
                 <input type={"text"} placeholder="Name" onChange={(e) => setName(e.target.value)}></input>
-                <button id="startbtn" className="btn" onClick={() => submitForm()}>Create Game</button>
+                <button id="createagamebtn" className="btn" onClick={() => submitForm()}>Create Game</button>
             </div>
         </>
     )

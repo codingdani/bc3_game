@@ -8,6 +8,7 @@ interface TGameDetails {
     minGuess: string,
     minPlayers: string,
 }
+
 function EnterGame() {
 
     const location = useLocation();
@@ -27,6 +28,7 @@ function EnterGame() {
             minPlayers: game.minPlayers
         })
     }
+
     useEffect(() => {
         if (location.state.from) {
             callData(location.state.from);
@@ -39,8 +41,6 @@ function EnterGame() {
         }
     }, [location])
 
-
-
     useEffect(() => {
         async function fetchWallet() {
             const { adress } = await getCurrentWalletConnected();
@@ -51,9 +51,7 @@ function EnterGame() {
 
     const changeGuess = ({ target }: any) => {
         setGuess(target.value)
-        console.log(guess);
     }
-
     const submitGuess = () => {
         if (guess > Number(gameDetails?.maxGuess) || guess < Number(gameDetails?.minGuess)) {
             console.log("fail")
@@ -81,10 +79,10 @@ function EnterGame() {
             </Link>
             {gameDetails ? (
                 <>
-                    <h2>66% of Intersection</h2>
+                    <h2>66.6% of Intersection</h2>
                     <div className="details">
                         <p>Contract Adress:{gameAdress} </p>
-                        <a href={`https=//sepolia.etherscan.io/adress/${gameAdress}`} target="_blank">show on Etherscan</a>
+                        <a href={`https://sepolia.etherscan.io/address/${gameAdress}`} target="_blank">show on Etherscan</a>
                     </div>
                     <div className="enterfee">
                         <p>current players: <span className="importantnr">{pCount}</span></p>
