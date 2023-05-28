@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
-
-import "hardhat/console.sol";
+import "../node_modules/hardhat/console.sol";
 
 contract GuessingGame {
     struct Rules {
@@ -18,6 +17,31 @@ contract GuessingGame {
         uint256 randomNumber;
         mapping(uint256 => address[]) possibleWinners;
     }
+
+    /*************************************New Commit/Reveal Scheme logic */
+    enum Phase {
+        Commit,
+        Reveal
+    }
+
+    struct Commit {
+        bytes32 commit;
+        bool revealed;
+        uint256 guess;
+    }
+
+    mapping(address => Commit) private commits;
+    mapping(address => bool) private hasWithdrawn;
+    address[] public players1;
+
+    uint256 public commitDeadline;
+    uint256 public startGameDeadline;
+    uint256 public revealDeadline;
+    uint256 public finishGameDeadline;
+
+    Phase public phase;
+
+    /******************************** */
 
     Rules public RULES;
     Outcome public outcome;
@@ -41,6 +65,10 @@ contract GuessingGame {
         owner = _owner;
         RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
         isInit = true;
+        //set the deadlines for this contract: 1 Day to enter, 1 Day to reveal
+        commitDeadline = block.timestamp + 86400;
+        startGameDeadline = commitDeadline + 86400;
+        phase = Phase.Commit;
     }
 
     receive() external payable {
@@ -61,6 +89,94 @@ contract GuessingGame {
     function getMyGuess() external view returns (uint256) {
         return playersGuesses[msg.sender];
     }
+
+    // commit
+
+    function players1Length() external view returns (uint256) {
+        return players1.length;
+    }
+
+    function commitHash(bytes32 _hash) external payable {
+        require(
+            block.timestamp <= commitDeadline,
+            "The commit deadline is over."
+        );
+        require(msg.value == RULES.entryFee, "Insufficient entry fee.");
+        require(
+            commits[msg.sender].commit == 0,
+            "You have already entered a guess."
+        );
+        players1.push(msg.sender);
+        commits[msg.sender].commit = _hash;
+    }
+
+    function reveal(uint256 guess, uint256 salt) external {
+        bytes32 commit = keccak256(abi.encodePacked(guess, salt));
+        require(phase == Phase.Reveal, "It's not the time to reveal yet.");
+        require(block.timestamp < revealDeadline, "The reveal time is over.");
+        require(
+            commits[msg.sender].commit != 0,
+            "There is no commit to be revealed."
+        );
+        require(!commits[msg.sender].revealed, "Guess was already revealed.");
+
+        require(
+            commit == commits[msg.sender].commit,
+            "You enter wrong guess or salt"
+        );
+
+        commits[msg.sender].revealed = true;
+        commits[msg.sender].guess = guess;
+    }
+
+    // If something goes wrong during this game player can withdraw their funds
+    function withdraw() external {
+        bool isPastCommitDeadline = block.timestamp > commitDeadline;
+        bool isBelowMinPlayers = players1.length < RULES.minPlayers;
+        bool isPastStartGameDeadline = block.timestamp > startGameDeadline;
+        bool isPhaseCommit = phase == Phase.Commit;
+        bool isPastfinishGameDeadline = block.timestamp > finishGameDeadline;
+        bool isPhaseReveal = phase == Phase.Reveal;
+        require(
+            (isPastCommitDeadline && isBelowMinPlayers) ||
+                (isPastStartGameDeadline && isPhaseCommit) ||
+                (isPastfinishGameDeadline && isPhaseReveal),
+            "You cannot withdraw."
+        );
+        require(!hasWithdrawn[msg.sender], "You already withdrawed.");
+        hasWithdrawn[msg.sender] = true;
+        address payable receiver = payable(msg.sender);
+        receiver.transfer(RULES.entryFee);
+    }
+
+    function startRevealPhase() external onlyOwner {
+        uint256 time = block.timestamp;
+        require(phase == Phase.Commit, "You can only start once");
+        require(
+            time > commitDeadline && time <= startGameDeadline,
+            "You can only start if the commit deadline is over and you're passed your own deadline"
+        );
+        require(
+            players1.length >= RULES.minPlayers,
+            "You can only start if there is enough players"
+        );
+        phase = Phase.Reveal;
+        revealDeadline = time + 86400;
+        finishGameDeadline = revealDeadline + 86400;
+    }
+
+    function selectWinner() public onlyOwner {
+        // start if reveal time is over and
+    }
+
+    // CommitPhase 1 day
+    // Two cases:
+    // 1. All necessary player committed -> startGameDeadline set for GM
+    // 2. Not Enough players -> Player can withdraw their funds
+    // One Day reveal time for players
+
+    // If some revealed but the other didnt reveal after a given timeframe
+    // the game can still be started by anyone and therefore all of them looses
 
     function enterGuess(uint256 _guess) external payable {
         require(!isStarted, "Game already started");
@@ -189,32 +305,4 @@ contract GuessingGame {
                 )
             );
     }
-
-    // function requestRandomNumber() private returns (bytes32) {
-    //     require(
-    //         LINK.balanceOf(address(this)) >= 1,
-    //         "Not enough LINK to fulfill request"
-    //     );
-    //     bytes memory encodedSeed = abi.encodePacked(
-    //         block.timestamp,
-    //         block.number
-    //     );
-    //     bytes32 requestId = requestRandomness(bytes32(encodedSeed), 0);
-    //     randomNumbers[requestId] = 0;
-    //     return requestId;
-    // }
-
-    // function fulfillRandomness(
-    //     bytes32 requestId,
-    //     uint256 randomness
-    // ) internal override {
-    //     randomNumbers[requestId] = randomness;
-    // }
-
-    // function autoStart() private {
-    //     require(players.length >= RULES.minPlayers, "Not enough players.");
-    //     // start startGame if enterGuess
-    // }
-
-    // After a game is finished, enterGame and enterGuess should be restricted
 }

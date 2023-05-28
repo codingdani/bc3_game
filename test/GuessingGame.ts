@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("GuessingGame", () => {
     async function deployFixture() {
@@ -14,6 +15,243 @@ describe("GuessingGame", () => {
         await guessingGame.init(minGuess, maxGuess, minPlayers, entryFee, accounts[0].address);
         return { accounts, guessingGame };
     }
+
+    describe.only("set game", () => {
+        it("should revert if commit time is not over", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            time.increase(5000);
+            await expect(guessingGame.startRevealPhase()).to.be.revertedWith("You can only start if the commit deadline is over and you're passed your own deadline");
+        })
+
+        it("should revert if commit time is over and not enough players", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            await time.increase(90000);
+            await expect(guessingGame.startRevealPhase()).to.be.revertedWith("You can only start if there is enough players");
+        })
+        it("should working after player enters and commit time is over", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            await guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[6]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await time.increase(90000);
+            await guessingGame.startRevealPhase()
+        })
+
+        it("should revert if startRevealPhase two times", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            await guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[6]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await time.increase(90000);
+            await guessingGame.startRevealPhase()
+            await expect(guessingGame.startRevealPhase()).to.be.revertedWith("You can only start once");
+        })
+
+
+
+        it("should revert if it's in Revealphase", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            await guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[6]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await time.increase(180000);
+            await expect(guessingGame.startRevealPhase()).to.be.revertedWith("You can only start if the commit deadline is over and you're passed your own deadline");
+        })
+
+    })
+
+    describe.only("commit Hash", () => {
+        it("should reject when player entered already", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await expect(guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") })).to.be.revertedWith("You have already entered a guess.");
+        })
+        it("should reject when player enter with not enough entry fee", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            await expect(guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.01") })).to.be.revertedWith("Insufficient entry fee.");
+        })
+        it("should revert if the commitTime is over", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            await time.increase(90000)
+            guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await expect(guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") })).to.be.revertedWith("The commit deadline is over.");
+        })
+    })
+
+
+    describe.only("withdraw", () => {
+        it("should revert if commit time hasnt passed", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            await guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await expect(guessingGame.connect(accounts[1]).withdraw()).to.be.revertedWith("You cannot withdraw.");
+        })
+        it("should possible to withdraw if the game master didn't start game", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            await guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await time.increase(90000);
+            await expect(guessingGame.connect(accounts[1]).withdraw()).to.be.revertedWith("You cannot withdraw.");
+            await time.increase(90000);
+            await expect(guessingGame.connect(accounts[1]).withdraw()).to.not.be.reverted;
+
+        })
+        it("should withdraw if commit time is over but too less player", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            await guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") })
+            await time.increase(90000);
+            await expect(guessingGame.connect(accounts[1]).withdraw()).to.not.be.reverted;
+
+        })
+
+        it("should withdraw the right amount and show right balance", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const entryFee = (await guessingGame.RULES()).entryFee;
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            await guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") })
+            await guessingGame.connect(accounts[2]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") })
+            const contractBalance = await ethers.provider.getBalance(guessingGame.address);
+            await time.increase(90000);
+            await guessingGame.connect(accounts[1]).withdraw();
+            const updatedContractBalance = await ethers.provider.getBalance(guessingGame.address);
+            expect(updatedContractBalance).to.be.equal(contractBalance.sub(entryFee));
+        })
+
+        it("should not withdraw twice", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("50"));
+            await guessingGame.connect(accounts[1]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(hash, { value: ethers.utils.parseUnits("0.1") });
+            await time.increase(90000);
+            await expect(guessingGame.connect(accounts[1]).withdraw()).to.not.be.reverted;
+            await expect(guessingGame.connect(accounts[1]).withdraw()).to.be.revertedWith("You already withdrawed.");
+        })
+    })
+
+
+    describe.only("reveal", async () => {
+        function calculateHash(guess: Number, salt: Number) {
+            const hash = ethers.utils.keccak256(
+                ethers.utils.defaultAbiCoder.encode(["uint256", "uint256"], [guess, salt])
+            );
+            return hash
+        }
+
+        it("should work if game continue as intended", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            //commit
+            await guessingGame.connect(accounts[1]).commitHash(calculateHash(25, 123), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(calculateHash(30, 467), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(calculateHash(41, 248), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).commitHash(calculateHash(56, 242), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).commitHash(calculateHash(89, 986), { value: ethers.utils.parseUnits("0.1") });
+            // past commit time
+            await time.increase(90000);
+            // past some time
+            await time.increase(30000);
+            // start the game
+            await guessingGame.startRevealPhase();
+            await expect(guessingGame.connect(accounts[1]).reveal(25, 123)).to.not.be.reverted;
+        })
+        it("should reject if player tries to reveal multiple times", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            //commit
+            await guessingGame.connect(accounts[1]).commitHash(calculateHash(25, 123), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(calculateHash(30, 467), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(calculateHash(41, 248), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).commitHash(calculateHash(56, 242), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).commitHash(calculateHash(89, 986), { value: ethers.utils.parseUnits("0.1") });
+            await time.increase(90000);
+            // past some time
+            await time.increase(30000);
+            // start the game
+            await guessingGame.startRevealPhase();
+            await expect(guessingGame.connect(accounts[1]).reveal(25, 123)).to.not.be.reverted;
+            await expect(guessingGame.connect(accounts[1]).reveal(25, 123)).to.be.revertedWith("Guess was already revealed.");
+        })
+        it("should revert if an unknown player tries to reveal", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            //commit
+            await guessingGame.connect(accounts[1]).commitHash(calculateHash(25, 123), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(calculateHash(30, 467), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(calculateHash(41, 248), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).commitHash(calculateHash(56, 242), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).commitHash(calculateHash(89, 986), { value: ethers.utils.parseUnits("0.1") });
+            await time.increase(90000);
+            // past some time
+            await time.increase(30000);
+            // start the game
+            await guessingGame.startRevealPhase();
+            //await guessingGame.connect(accounts[6]).reveal(25, 123)
+            await expect(guessingGame.connect(accounts[6]).reveal(25, 123)).to.be.revertedWith("There is no commit to be revealed.");
+        })
+        it("should revert if player tries to lie", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            //commit
+            await guessingGame.connect(accounts[1]).commitHash(calculateHash(25, 123), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(calculateHash(30, 467), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(calculateHash(41, 248), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).commitHash(calculateHash(56, 242), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).commitHash(calculateHash(89, 986), { value: ethers.utils.parseUnits("0.1") });
+            await time.increase(90000);
+            // past some time
+            await time.increase(30000);
+            // start the game
+            await guessingGame.startRevealPhase();
+            await expect(guessingGame.connect(accounts[1]).reveal(55, 123)).to.be.revertedWith("You enter wrong guess or salt");
+        })
+        it("should revert if player doesn't answer during reveal time", async () => {
+            const { accounts, guessingGame } = await deployFixture();
+            //commit
+            await guessingGame.connect(accounts[1]).commitHash(calculateHash(25, 123), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(calculateHash(30, 467), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(calculateHash(41, 248), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).commitHash(calculateHash(56, 242), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).commitHash(calculateHash(89, 986), { value: ethers.utils.parseUnits("0.1") });
+            await time.increase(90000);
+            // past some time3
+            await guessingGame.startRevealPhase();
+            await time.increase(90000);
+            // start the game
+            await expect(guessingGame.connect(accounts[1]).reveal(25, 123)).to.be.revertedWith("The reveal time is over.");
+
+        })
+        it("should revert if its not time to reveal", async () => {
+
+            const { accounts, guessingGame } = await deployFixture();
+            //commit
+            await guessingGame.connect(accounts[1]).commitHash(calculateHash(25, 123), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[2]).commitHash(calculateHash(30, 467), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[3]).commitHash(calculateHash(41, 248), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[4]).commitHash(calculateHash(56, 242), { value: ethers.utils.parseUnits("0.1") });
+            await guessingGame.connect(accounts[5]).commitHash(calculateHash(89, 986), { value: ethers.utils.parseUnits("0.1") });
+
+            await expect(guessingGame.connect(accounts[1]).reveal(25, 123)).to.be.revertedWith("It's not the time to reveal yet.");
+
+        })
+    })
 
     describe("Enter Guess", () => {
         it("should reject when player enter with not enough entry fee", async () => {
@@ -48,6 +286,11 @@ describe("GuessingGame", () => {
             )).to.be.revertedWith("This contract does not accept Ether, if you don't participate in the Game.");
         })
     })
+
+
+
+
+
 
     describe("Contract information", () => {
 
