@@ -2,8 +2,11 @@
 pragma solidity ^0.8.18;
 import "../node_modules/hardhat/console.sol";
 
-// TODO: Events, WithdrawWinnings, Test tie, GM gets all money if nobody reveal,
+// TODO: Events, WithdrawWinnings, Test tie, fee structur
 contract GuessingGame {
+    uint256 public constant DAY = 86400; //seconds
+    uint256 public constant WEEK = DAY * 7; //seconds
+
     enum Phase {
         Commit,
         Reveal
@@ -28,10 +31,10 @@ contract GuessingGame {
     mapping(address => bool) private hasWithdrawn;
     address[] public players;
 
-    uint256 public commitDeadline;
-    uint256 public startGameDeadline;
     uint256 public revealDeadline;
     uint256 public finishGameDeadline;
+
+    uint256 public expired = block.timestamp + WEEK;
 
     /************************** */
 
@@ -55,10 +58,6 @@ contract GuessingGame {
         owner = _owner;
         RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
         isInit = true;
-        //set the deadlines for this contract: 1 Day to enter, 1 Day to reveal
-        commitDeadline = block.timestamp + 86400;
-        startGameDeadline = commitDeadline + 86400;
-        phase = Phase.Commit;
     }
 
     receive() external payable {
@@ -72,29 +71,22 @@ contract GuessingGame {
         _;
     }
 
+    modifier gameExpired() {
+        require(block.timestamp < expired, "Game is expired.");
+        _;
+    }
+
     function getPlayerCount() external view returns (uint256) {
         return players.length;
     }
 
     function getMyGuess() external view returns (uint256) {
-        require(
-            commits[msg.sender].revealed == true,
-            "You didn't revealed your guess yet to get your guess."
-        );
+        require(commits[msg.sender].revealed == true, "There is no guess.");
         return commits[msg.sender].guess;
     }
 
-    // commit
-
-    function playersLength() external view returns (uint256) {
-        return players.length;
-    }
-
-    function commitHash(bytes32 _hash) external payable {
-        require(
-            block.timestamp <= commitDeadline,
-            "The commit deadline is over."
-        );
+    function commitHash(bytes32 _hash) external payable gameExpired {
+        require(phase == Phase.Commit, "The commit phase is over.");
         require(msg.value == RULES.entryFee, "Insufficient entry fee.");
         require(
             commits[msg.sender].commit == 0,
@@ -104,20 +96,13 @@ contract GuessingGame {
         commits[msg.sender].commit = _hash;
     }
 
-    function reveal(uint256 guess, uint256 salt) external {
+    function reveal(uint256 guess, uint256 salt) external gameExpired {
         bytes32 commit = keccak256(abi.encodePacked(guess, salt));
         require(phase == Phase.Reveal, "It's not the time to reveal yet.");
-        require(block.timestamp < revealDeadline, "The reveal time is over.");
-        require(
-            commits[msg.sender].commit != 0,
-            "There is no commit to be revealed."
-        );
+        require(block.timestamp < revealDeadline, "Reveal deadline is over.");
+        require(commits[msg.sender].commit != 0, "There is no commit.");
         require(!commits[msg.sender].revealed, "Guess was already revealed.");
-
-        require(
-            commit == commits[msg.sender].commit,
-            "You enter wrong guess or salt"
-        );
+        require(commit == commits[msg.sender].commit, "Wrong guess or salt.");
 
         commits[msg.sender].revealed = true;
         commits[msg.sender].guess = guess;
@@ -125,51 +110,27 @@ contract GuessingGame {
         revealedPlayers += 1;
     }
 
-    // If something goes wrong during this game player can withdraw their funds
-    // problem the owner can withdraw funds
     function withdraw() external {
-        bool isPastCommitDeadline = block.timestamp > commitDeadline;
-        bool isBelowMinPlayers = players.length < RULES.minPlayers;
-        bool isPastStartGameDeadline = block.timestamp > startGameDeadline;
-        bool isPhaseCommit = phase == Phase.Commit;
-        bool isPastfinishGameDeadline = block.timestamp > finishGameDeadline;
-        bool isPhaseReveal = phase == Phase.Reveal;
-        require(
-            (isPastCommitDeadline && isBelowMinPlayers) ||
-                (isPastStartGameDeadline && isPhaseCommit) ||
-                (isPastfinishGameDeadline && isPhaseReveal),
-            "You cannot withdraw."
-        );
+        uint256 time = block.timestamp;
+        require(time > expired && !isStarted, "You cannot withdraw.");
+        require(commits[msg.sender].commit != 0, "You didn't participate.");
         require(!hasWithdrawn[msg.sender], "You already withdrawed.");
         hasWithdrawn[msg.sender] = true;
         address payable receiver = payable(msg.sender);
         receiver.transfer(RULES.entryFee);
     }
 
-    function startRevealPhase() external onlyOwner {
-        uint256 time = block.timestamp;
-        require(phase == Phase.Commit, "You can only start once");
-        require(
-            time > commitDeadline && time <= startGameDeadline,
-            "You can only start if the commit deadline is over and you're passed your own deadline"
-        );
-        require(
-            players.length >= RULES.minPlayers,
-            "You can only start if there is enough players"
-        );
+    function startRevealPhase() external onlyOwner gameExpired {
+        require(phase == Phase.Commit, "Already started reveal phase.");
+        require(players.length >= RULES.minPlayers, "Not enough players.");
         phase = Phase.Reveal;
-        revealDeadline = time + 86400;
-        finishGameDeadline = revealDeadline + 86400;
+        revealDeadline = block.timestamp + DAY;
     }
 
-    function finishGame() public onlyOwner {
+    function finishGame() public onlyOwner gameExpired {
         uint256 time = block.timestamp;
-        require(
-            time > revealDeadline &&
-                time <= finishGameDeadline &&
-                phase == Phase.Reveal,
-            "You are not able to finish this game yet"
-        );
+        require(time > revealDeadline, "The reveal deadline isn't over yet.");
+        require(revealedPlayers != 0, "Nobody revealed their guess yet.");
         require(!isStarted, "Game already started");
         isStarted = true;
         uint256 target = ((sum / revealedPlayers) * 66) / 100;
