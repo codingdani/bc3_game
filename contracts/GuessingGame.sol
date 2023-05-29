@@ -4,6 +4,10 @@ import "../node_modules/hardhat/console.sol";
 
 // TODO: Events, WithdrawWinnings, Test tie, fee structur
 contract GuessingGame {
+    event CommitMade(address indexed _from, bytes32 _hash);
+    event RevealStart(address indexed _from, uint256 _deadline);
+    event RevealMade(address indexed _from, uint256 _guess);
+    event WinnerDeclared(address indexed _winner, uint256 _amount);
     uint256 public constant DAY = 86400; //seconds
     uint256 public constant WEEK = DAY * 7; //seconds
 
@@ -32,18 +36,18 @@ contract GuessingGame {
     address[] public players;
 
     uint256 public revealDeadline;
-    uint256 public finishGameDeadline;
-
     uint256 public expired = block.timestamp + WEEK;
-
-    /************************** */
 
     /**************** Game calculation */
     uint256 sum;
     uint256 revealedPlayers;
 
     address public owner;
+
     address public winner;
+    bool winnerHasWithdrawed;
+    uint256 winningAmount;
+
     bool isInit = false;
     bool isStarted = false;
 
@@ -76,16 +80,16 @@ contract GuessingGame {
         _;
     }
 
-    function getPlayerCount() external view returns (uint256) {
+    function getPlayerCount() public view returns (uint256) {
         return players.length;
     }
 
-    function getMyGuess() external view returns (uint256) {
+    function getMyGuess() public view returns (uint256) {
         require(commits[msg.sender].revealed == true, "There is no guess.");
         return commits[msg.sender].guess;
     }
 
-    function commitHash(bytes32 _hash) external payable gameExpired {
+    function commitHash(bytes32 _hash) public payable gameExpired {
         require(phase == Phase.Commit, "The commit phase is over.");
         require(msg.value == RULES.entryFee, "Insufficient entry fee.");
         require(
@@ -94,9 +98,10 @@ contract GuessingGame {
         );
         players.push(msg.sender);
         commits[msg.sender].commit = _hash;
+        emit CommitMade(msg.sender, _hash);
     }
 
-    function reveal(uint256 guess, uint256 salt) external gameExpired {
+    function reveal(uint256 guess, uint256 salt) public gameExpired {
         bytes32 commit = keccak256(abi.encodePacked(guess, salt));
         require(phase == Phase.Reveal, "It's not the time to reveal yet.");
         require(block.timestamp < revealDeadline, "Reveal deadline is over.");
@@ -108,23 +113,24 @@ contract GuessingGame {
         commits[msg.sender].guess = guess;
         sum += guess;
         revealedPlayers += 1;
+        emit RevealMade(msg.sender, guess);
     }
 
-    function withdraw() external {
+    function withdraw() public {
         uint256 time = block.timestamp;
         require(time > expired && !isStarted, "You cannot withdraw.");
         require(commits[msg.sender].commit != 0, "You didn't participate.");
         require(!hasWithdrawn[msg.sender], "You already withdrawed.");
         hasWithdrawn[msg.sender] = true;
-        address payable receiver = payable(msg.sender);
-        receiver.transfer(RULES.entryFee);
+        payable(msg.sender).transfer(RULES.entryFee);
     }
 
-    function startRevealPhase() external onlyOwner gameExpired {
+    function startRevealPhase() public onlyOwner gameExpired {
         require(phase == Phase.Commit, "Already started reveal phase.");
         require(players.length >= RULES.minPlayers, "Not enough players.");
         phase = Phase.Reveal;
         revealDeadline = block.timestamp + DAY;
+        emit RevealStart(owner, revealDeadline);
     }
 
     function finishGame() public onlyOwner gameExpired {
@@ -144,6 +150,21 @@ contract GuessingGame {
         uint256 randomNumber = random();
         uint256 winnerIndex = randomNumber % (possibleWinners.length);
         winner = possibleWinners[winnerIndex];
+        winningAmount = (address(this).balance * 95) / 100;
+        emit WinnerDeclared(winner, winningAmount);
+    }
+
+    function payout() public {
+        require(winner == msg.sender, "You are not the winner.");
+        require(!winnerHasWithdrawed, "You already withdrawed your win.");
+        winnerHasWithdrawed = true;
+        payable(winner).transfer(winningAmount);
+    }
+
+    function retrieveWinningFee() public onlyOwner {
+        require(winnerHasWithdrawed, "The winner hasn't payout their win.");
+        require(address(this).balance > 0, "You already collected your fee.");
+        payable(msg.sender).transfer(address(this).balance);
     }
 
     function calcWinningDiff(
@@ -221,141 +242,4 @@ contract GuessingGame {
                 )
             );
     }
-
-    // CommitPhase 1 day
-    // Two cases:
-    // 1. All necessary player committed -> startGameDeadline set for GM
-    // 2. Not Enough players -> Player can withdraw their funds
-    // One Day reveal time for players
-
-    // If some revealed but the other didnt reveal after a given timeframe
-    // the game can still be started by anyone and therefore all of them looses
-
-    //     function enterGuess(uint256 _guess) external payable {
-    //         require(!isStarted, "Game already started");
-    //         require(msg.value == RULES.entryFee, "Insufficient entry fee.");
-    //         require(
-    //             _guess >= RULES.minGuess && _guess <= RULES.maxGuess,
-    //             "Check your input value."
-    //         );
-    //         require(
-    //             playersGuesses[msg.sender] == 0,
-    //             "You have already entered a guess."
-    //         );
-    //         players.push(msg.sender);
-    //         playersGuesses[msg.sender] = _guess;
-    //     }
-
-    //     function startGame() external onlyOwner {
-    //         require(!isStarted, "Game already started");
-    //         isStarted = true;
-    //         require(players.length >= RULES.minPlayers, "Not enough players.");
-    //         uint256 sum = sumGuesses();
-    //         uint256 target = ((sum / players.length) * 66) / 100;
-    //         uint256 minDiff = calcWinningDiff(RULES.maxGuess, target);
-    //         uint256 countWinners = getAmountOfWinners(minDiff, target, 0);
-    //         address[] memory possibleWinners = getPossibleWinners(
-    //             minDiff,
-    //             target,
-    //             countWinners
-    //         );
-    //         uint256 randomNumber = random();
-    //         uint256 winnerIndex = randomNumber % (possibleWinners.length);
-    //         winner = possibleWinners[winnerIndex];
-
-    //         outcome.key = minDiff;
-    //         outcome.sum = sum;
-    //         outcome.target = target;
-    //         outcome.randomNumber = randomNumber;
-    //         outcome.possibleWinners[minDiff] = possibleWinners;
-    //         payout();
-    //     }
-
-    //     function sumGuesses() private view returns (uint256) {
-    //         uint256 sum = 0;
-    //         for (uint256 i = 0; i < players.length; i++) {
-    //             sum += playersGuesses[players[i]];
-    //         }
-    //         return sum;
-    //     }
-
-    //     function outcomePossibleWinners(
-    //         uint256 key
-    //     ) public view returns (address[] memory) {
-    //         return outcome.possibleWinners[key];
-    //     }
-
-    //     function getPossibleWinners(
-    //         uint256 minDiff,
-    //         uint256 target,
-    //         uint256 countWinners
-    //     ) private view returns (address[] memory) {
-    //         address[] memory possibleWinners = new address[](countWinners);
-    //         uint256 amount = 0;
-    //         for (uint256 i = 0; i < players.length; i++) {
-    //             if (minDiff == absDiff(playersGuesses[players[i]], target)) {
-    //                 possibleWinners[amount] = players[i];
-    //                 amount++;
-    //             }
-    //         }
-    //         return possibleWinners;
-    //     }
-
-    //     function calcWinningDiff(
-    //         uint256 minDiff,
-    //         uint256 target
-    //     ) private view returns (uint256) {
-    //         for (uint256 i = 0; i < players.length; i++) {
-    //             if (absDiff(playersGuesses[players[i]], target) <= minDiff) {
-    //                 minDiff = absDiff(playersGuesses[players[i]], target);
-    //             }
-    //         }
-    //         return minDiff;
-    //     }
-
-    //     function getAmountOfWinners(
-    //         uint256 minDiff,
-    //         uint256 target,
-    //         uint256 count
-    //     ) private view returns (uint256) {
-    //         for (uint256 i = 0; i < players.length; i++) {
-    //             if (minDiff == absDiff(playersGuesses[players[i]], target)) {
-    //                 count++;
-    //             }
-    //         }
-    //         return count;
-    //     }
-
-    //     function absDiff(
-    //         uint256 num1,
-    //         uint256 num2
-    //     ) private pure returns (uint256) {
-    //         if (num1 >= num2) {
-    //             return num1 - num2;
-    //         } else {
-    //             return num2 - num1;
-    //         }
-    //     }
-
-    //     function payout() private {
-    //         require(winner != address(0), "Winner has not been announced yet.");
-    //         uint256 amount = address(this).balance;
-    //         require(amount > 0, "No balance to payout.");
-    //         payable(winner).transfer(amount);
-    //     }
-
-    //     // this is pseudo random generator, A miner can actually influence this
-    //     // it's better to use chainlink for that
-    //     function random() private view returns (uint) {
-    //         return
-    //             uint(
-    //                 keccak256(
-    //                     abi.encodePacked(
-    //                         block.timestamp,
-    //                         block.prevrandao,
-    //                         block.number
-    //                     )
-    //                 )
-    //             );
-    //     }
 }
