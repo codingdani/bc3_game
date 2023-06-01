@@ -4,9 +4,6 @@ import CreateGame from './Screens/CreateGame';
 import CurrentOpenGames from './Screens/CurrentOpenGames';
 import EnterGame from './Screens/EnterGame';
 import HomeScreen from './Screens/HomeScreen';
-import PlayingScreen from './Screens/PlayingScreen';
-import StartGame from './Screens/StartGame';
-import WinnerScreen from './Screens/WinnerScreen';
 import { connectWallet, getCurrentWalletConnected } from "./utils/interact";
 
 
@@ -47,22 +44,23 @@ function App() {
   return (
 
     <div className="App">
-      <button id="connectwalletbtn" className="btn" onClick={connectWalletPressed}>
-        {walletAddress && walletAddress.length > 0 ? (
-          "Connected: " +
-          String(walletAddress).substring(0, 6) +
-          "..." +
-          String(walletAddress).substring(38)
-        ) : (
-          <span>Connect Wallet</span>
-        )}
-      </button>
+      <header>
+        <button id="connectwalletbtn" className="btn" onClick={connectWalletPressed}>
+          {walletAddress && walletAddress.length > 0 ? (
+            "Connected: " +
+            String(walletAddress).substring(0, 6) +
+            "..." +
+            String(walletAddress).substring(38)
+          ) : (
+            <span>Connect Wallet</span>
+          )}
+        </button>
+      </header>
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/creategame" element={<CreateGame />} />
         <Route path="/entergame/:adress" element={<EnterGame />} />
         <Route path="/opengames" element={<CurrentOpenGames />} />
-        <Route path="/enteredgame/:adress" element={<PlayingScreen />} />
       </Routes>
     </div>
   );

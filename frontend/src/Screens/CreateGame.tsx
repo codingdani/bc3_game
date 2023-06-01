@@ -10,7 +10,6 @@ function CreateGame() {
     const [minGuess, setMinGuess] = useState<number>(0);
     const [maxGuess, setMaxGuess] = useState<number>(0);
     const [entryFee, setEntryFee] = useState<number>(0);
-    const [name, setName] = useState<string>();
 
     async function fetchWallet() {
         const { adress } = await getCurrentWalletConnected();
@@ -32,6 +31,7 @@ function CreateGame() {
     const changePlayerCount = ({ target }: any) => {
         setMinPlayerCount(target.value)
     }
+
     const submitForm = () => {
         if (walletAdress.length > 0 &&
             maxGuess > 0 &&
@@ -46,7 +46,6 @@ function CreateGame() {
 
     return (
         <>
-            <div className="layer"></div>
             <Link to="/">
                 <button id="backbtn" className="btn">back</button>
             </Link>
@@ -60,10 +59,8 @@ function CreateGame() {
                     <input type={"number"} placeholder="max" onChange={changeMaxGuess}></input>
                 </div>
                 <p>Entry Fee: </p>
-                <p>Ether Logo</p>
-                <input type={"number"} placeholder="Entry Fee" onChange={changeEntryFee}></input>
-                <p>Enter a Name: </p>
-                <input type={"text"} placeholder="Name" onChange={(e) => setName(e.target.value)}></input>
+                <div id="eth_logo" className="positioned"></div>
+                <input type={"number"} placeholder="Entry Fee in ETH" id="entryfeeinput" onChange={changeEntryFee}></input>
                 <button id="createagamebtn" className="btn" onClick={() => submitForm()}>Create Game</button>
             </div>
         </>

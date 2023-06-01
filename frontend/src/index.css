@@ -34,7 +34,6 @@ input[type=number]::-webkit-outer-spin-button {
 
 input[type=number]:focus {
   border: 3px solid rgb(181, 167, 2);
-
 }
 
 input {
@@ -61,8 +60,12 @@ input {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-evenly;
   flex-direction: column;
+}
+
+header {
+  margin: 5vh;
 }
 
 #king {
@@ -85,8 +88,9 @@ input {
 
 .details {
   font-size: 0.8rem;
-  position: absolute;
-  top: 20%;
+  width: 300px;
+  padding: 10px;
+  margin: 0 5px;
 }
 
 h1 {
@@ -257,7 +261,8 @@ h2 {
 }
 
 .enterfee {
-  margin-bottom: 5%;
+  margin-bottom: 2%;
+  min-width: 600px;
   padding: 1% 3%;
   display: flex;
   align-items: center;
@@ -324,6 +329,28 @@ h2 {
 .flex {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.width100 {
+  width: 100%;
+}
+
+.evenly {
+  justify-content: space-evenly;
+}
+
+.primarytext {
+  color: rgb(176, 3, 0);
+}
+
+.secondarytext {
+  color: rgb(181, 167, 2);
+}
+
+.flexstart {
+  align-self: flex-start;
 }
 
 .column {

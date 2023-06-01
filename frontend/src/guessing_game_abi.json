@@ -1,5 +1,94 @@
 [
     {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "_hash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "CommitMade",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "_guess",
+                "type": "uint256"
+            }
+        ],
+        "name": "RevealMade",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "_deadline",
+                "type": "uint256"
+            }
+        ],
+        "name": "RevealStart",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_winner",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "WinnerDeclared",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "DAY",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "RULES",
         "outputs": [
@@ -28,16 +117,49 @@
         "type": "function"
     },
     {
-        "inputs": [
+        "inputs": [],
+        "name": "WEEK",
+        "outputs": [
             {
                 "internalType": "uint256",
-                "name": "_guess",
+                "name": "",
                 "type": "uint256"
             }
         ],
-        "name": "enterGuess",
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "_hash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "commitHash",
         "outputs": [],
         "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "expired",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "finishGame",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -101,46 +223,12 @@
     },
     {
         "inputs": [],
-        "name": "outcome",
+        "name": "owner",
         "outputs": [
             {
-                "internalType": "uint256",
-                "name": "key",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "sum",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "target",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "randomNumber",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "key",
-                "type": "uint256"
-            }
-        ],
-        "name": "outcomePossibleWinners",
-        "outputs": [
-            {
-                "internalType": "address[]",
+                "internalType": "address",
                 "name": "",
-                "type": "address[]"
+                "type": "address"
             }
         ],
         "stateMutability": "view",
@@ -148,12 +236,19 @@
     },
     {
         "inputs": [],
-        "name": "owner",
+        "name": "payout",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "phase",
         "outputs": [
             {
-                "internalType": "address",
+                "internalType": "enum GuessingGame.Phase",
                 "name": "",
-                "type": "address"
+                "type": "uint8"
             }
         ],
         "stateMutability": "view",
@@ -180,7 +275,45 @@
     },
     {
         "inputs": [],
-        "name": "startGame",
+        "name": "retrieveWinningFee",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "guess",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "salt",
+                "type": "uint256"
+            }
+        ],
+        "name": "reveal",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "revealDeadline",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "startRevealPhase",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -196,6 +329,13 @@
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "withdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {

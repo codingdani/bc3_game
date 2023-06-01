@@ -36,7 +36,7 @@ function CurrentOpenGames() {
                         setOpenGamesDetails(gameArray);
                     });
             }
-            setTimeout(() => setLoading(false), 2000);
+            setLoading(false);
         }
         fetchGameRules(openGames);
     }, [openGames])

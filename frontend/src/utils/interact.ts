@@ -1,7 +1,7 @@
 const infuraKey = "b6b652a41f604aadb527654f04bed96c";
 const gameContractABI = require('../guessing_game_abi.json');
 const factoryContractABI = require('../factory_abi.json');
-const factoryAdress: string = "0xFDB5BAe7AB7e73214355e38cFe99318b0900eDeC";
+const factoryAdress: string = "0x60A59e365386d1462e1700a70480a45a154551F6";
 
 const Web3 = require('web3');
 const web3 = new Web3(
@@ -58,12 +58,13 @@ export const createGame = async (
     }
 }
 
-export const enterAGame = async (contract: string, wallet: string, guess: number) => {
+export const enterAGame = async (contract: string, wallet: string, guess: number, salt: number) => {
     if (!window.ethereum || wallet === null || wallet === undefined) {
         return {
             status: "💡 Connect your Metamask wallet to update the message on the blockchain."
         }
     }
+    const _hash = web3.utils.soliditySha3(guess, salt);
     const gameContract = await new web3.eth.Contract(
         gameContractABI,
         contract,
@@ -72,7 +73,7 @@ export const enterAGame = async (contract: string, wallet: string, guess: number
     const transactionParams = {
         to: contract,
         from: wallet,
-        data: gameContract.methods.enterGuess(guess).encodeABI(),
+        data: gameContract.methods.commitHash(_hash).encodeABI(),
         value: web3.utils.toHex(gameRules.entryFee.toString()),
     }
     try {
@@ -96,8 +97,8 @@ export const getGameDetails = async (adress: string) => {
         adress,
     )
     const contractRules = await contract.methods.RULES().call();
-    const entryFeeToWei = web3.utils.fromWei(contractRules.entryFee.toString(), "ether");
-    contractRules.entryFee = entryFeeToWei
+    const entryFeeFromWei = web3.utils.fromWei(contractRules.entryFee.toString(), "ether");
+    contractRules.entryFee = entryFeeFromWei
     return contractRules;
 }
 
@@ -106,15 +107,45 @@ export const getCurrentPlayerCount = async (adress: string) => {
         gameContractABI,
         adress,
     )
-    const currentPlayerCount = await contract.methods.getPlayerCount().call();
+    const currentPlayerCount: number = await contract.methods.getPlayerCount().call();
     return currentPlayerCount;
+}
+
+export const getMyGuess = async (adress: string) => {
+    const contract = new web3.eth.Contract(
+        gameContractABI,
+        adress,
+    )
+    const myGuess = await contract.methods.getMyGuess().call();
+    console.log(myGuess)
+    return myGuess;
+}
+
+export const checkForParticipation = async (address: string, contractAddress: string) => {
+    const contract = new web3.eth.Contract(
+        gameContractABI,
+        contractAddress
+    )
+    const playersArray: string[] = await contract.methods.players().call();
+    return playersArray.includes(address);
+}
+
+export const checkIfGameMaster = async (address: string, contractAddress: string) => {
+    const contract = new web3.eth.Contract(
+        gameContractABI,
+        contractAddress,
+    )
+    const contractOwner: string = await contract.methods.owner().call();
+    console.log("gamemaster", contractOwner);
+    console.log("vergleichr", address);
+    return contractOwner.trim().toLowerCase() === address.trim().toLowerCase() ? true : false;
 }
 
 //WALLET
 export const connectWallet = async () => {
     if (window.ethereum) {
         try {
-            const adressArray = await window.ethereum.request({
+            const adressArray: string[] = await window.ethereum.request({
                 method: "eth_requestAccounts",
             });
             const obj = {
@@ -139,7 +170,7 @@ export const connectWallet = async () => {
 export const getCurrentWalletConnected = async () => {
     if (window.ethereum) {
         try {
-            const addressArray = await window.ethereum.request({
+            const addressArray: string[] = await window.ethereum.request({
                 method: "eth_accounts",
             });
             if (addressArray.length > 0) {
