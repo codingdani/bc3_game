@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
-import "../node_modules/hardhat/console.sol";
 
-// TODO: Events, WithdrawWinnings, Test tie, fee structur
 contract GuessingGame {
     event CommitMade(address indexed _from, bytes32 _hash);
     event RevealStart(address indexed _from, uint256 _deadline);
@@ -36,7 +34,7 @@ contract GuessingGame {
     address[] public players;
 
     uint256 public revealDeadline;
-    uint256 public expired = block.timestamp + WEEK;
+    uint256 public expired;
 
     /**************** Game calculation */
     uint256 sum;
@@ -62,6 +60,7 @@ contract GuessingGame {
         owner = _owner;
         RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
         isInit = true;
+        expired = block.timestamp + WEEK;
     }
 
     receive() external payable {
@@ -167,10 +166,11 @@ contract GuessingGame {
         payable(msg.sender).transfer(address(this).balance);
     }
 
-    function calcWinningDiff(
-        uint256 minDiff,
-        uint256 target
-    ) private view returns (uint256) {
+    function calcWinningDiff(uint256 minDiff, uint256 target)
+        private
+        view
+        returns (uint256)
+    {
         for (uint256 i = 0; i < players.length; i++) {
             if (
                 commits[players[i]].revealed == true &&
@@ -182,10 +182,11 @@ contract GuessingGame {
         return minDiff;
     }
 
-    function absDiff(
-        uint256 num1,
-        uint256 num2
-    ) private pure returns (uint256) {
+    function absDiff(uint256 num1, uint256 num2)
+        private
+        pure
+        returns (uint256)
+    {
         if (num1 >= num2) {
             return num1 - num2;
         } else {
@@ -230,9 +231,9 @@ contract GuessingGame {
 
     // this is pseudo random generator, A miner can actually influence this
     // it's better to use chainlink for that e.g. GM has to get random number first before starting the game
-    function random() private view returns (uint) {
+    function random() private view returns (uint256) {
         return
-            uint(
+            uint256(
                 keccak256(
                     abi.encodePacked(
                         block.timestamp,
