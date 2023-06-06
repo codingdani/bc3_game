@@ -13,8 +13,8 @@ function App() {
 
   const connectWalletPressed = async () => {
     const walletResponse: any = await connectWallet();
-    if (typeof walletResponse.adress == 'string') {
-      setWallet(walletResponse.adress);
+    if (typeof walletResponse.address == 'string') {
+      setWallet(walletResponse.address);
     }
   };
 
@@ -32,8 +32,8 @@ function App() {
   }
 
   async function fetchWallet() {
-    const { adress } = await getCurrentWalletConnected();
-    setWallet(adress);
+    const { address } = await getCurrentWalletConnected();
+    setWallet(address);
   }
 
   useEffect(() => {

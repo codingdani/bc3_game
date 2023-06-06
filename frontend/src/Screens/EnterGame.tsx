@@ -50,7 +50,7 @@ function EnterGame() {
             console.log("masterState changed", masterState)
         }
         const fetchParticipationInfo = async () => {
-            await checkForParticipation(walletAdress, location.state.from);
+            const participationState = await checkForParticipation(walletAdress, location.state.from);
             //setHasEntered(participationState);
         }
         fetchGameMasterInfo();
@@ -59,8 +59,8 @@ function EnterGame() {
 
     useEffect(() => {
         async function fetchWallet() {
-            const { adress } = await getCurrentWalletConnected();
-            setWalletAdress(adress);
+            const { address } = await getCurrentWalletConnected();
+            setWalletAdress(address);
         }
         fetchWallet()
     }, []);
@@ -110,8 +110,7 @@ function EnterGame() {
                                     String(gameAdress).substring(38)
                                 }
                                 </p>
-                                <p>current players: <span className="importantnr">{pCount}</span></p>
-                                <p>min.: <span className="importantnr">{gameDetails.minPlayers}</span></p>
+                                <p>current players: <span className="importantnr">{pCount}</span>  min. players: <span className="importantnr">{gameDetails.minPlayers}</span></p>
                             </div>
                             <div className="textfield bordergreen">
                                 <h3 className="secondarytext">RULES</h3>

@@ -1,3 +1,5 @@
+//dotenv bug with typescript??
+
 const infuraKey = "b6b652a41f604aadb527654f04bed96c";
 const gameContractABI = require('../guessing_game_abi.json');
 const factoryContractABI = require('../factory_abi.json');
@@ -13,6 +15,15 @@ const factoryContract = new web3.eth.Contract(
     factoryContractABI,
     factoryAdress,
 );
+
+const createGameContractInstance = (address: string) => {
+    const contract = new web3.eth.Contract(
+        gameContractABI,
+        address,
+    )
+    return contract
+}
+
 //FETCH OPEN GAMES
 const getAllGameMasters = async () => {
     return await factoryContract.methods.getMasters().call();
@@ -26,6 +37,7 @@ export const getAllCurrentGames = async () => {
     }
     return gameArray;
 }
+
 //GAME INTERACTION
 export const createGame = async (
     adress: string,
@@ -58,21 +70,20 @@ export const createGame = async (
     }
 }
 
-export const enterAGame = async (contract: string, wallet: string, guess: number, salt: number) => {
+export const enterAGame = async (contractAddress: string, wallet: string, guess: number, salt: number) => {
     if (!window.ethereum || wallet === null || wallet === undefined) {
         return {
             status: "💡 Connect your Metamask wallet to update the message on the blockchain."
         }
     }
-    const _hash = web3.utils.soliditySha3(3, 100);
-    console.log("hash commit", _hash)
+    const _hash = web3.utils.soliditySha3(guess, salt);
     const gameContract = await new web3.eth.Contract(
         gameContractABI,
-        contract,
+        contractAddress,
     )
     const gameRules = await gameContract.methods.RULES().call();
     const transactionParams = {
-        to: contract,
+        to: contractAddress,
         from: wallet,
         data: gameContract.methods.commitHash(_hash).encodeABI(),
         value: web3.utils.toHex(gameRules.entryFee.toString()),
@@ -103,33 +114,36 @@ export const getGameDetails = async (adress: string) => {
     return contractRules;
 }
 
-export const getCurrentPlayerCount = async (adress: string) => {
+export const getCurrentPlayerCount = async (address: string) => {
     const contract = new web3.eth.Contract(
         gameContractABI,
-        adress,
+        address,
     )
     const currentPlayerCount: number = await contract.methods.getPlayerCount().call();
     return currentPlayerCount;
 }
 
-export const getMyGuess = async (adress: string) => {
+export const getMyGuess = async (address: string) => {
     const contract = new web3.eth.Contract(
         gameContractABI,
-        adress,
+        address,
     )
     const myGuess = await contract.methods.getMyGuess().call();
-    console.log(myGuess)
     return myGuess;
 }
+
 //INFO FOR STATE TO RENDER PAGES ACCORDINGLY
 export const checkForParticipation = async (address: string, contractAddress: string) => {
     const contract = new web3.eth.Contract(
         gameContractABI,
         contractAddress
-    )
+    );
     const playersArray: string[] = await contract.methods.getPlayers().call();
-    console.log("participating?", playersArray);
-    //return playersArray.includes(address);
+    const lowerCaseArray: string[] = []
+    playersArray.map((string) => {
+        lowerCaseArray.push(string.trim().toLowerCase())
+    });
+    return lowerCaseArray.includes(address.trim().toLowerCase());
 }
 
 export const checkIfGameMaster = async (address: string, contractAddress: string) => {
@@ -141,31 +155,46 @@ export const checkIfGameMaster = async (address: string, contractAddress: string
     return contractOwner.trim().toLowerCase() === address.trim().toLowerCase() ? true : false;
 }
 
-//EVENT LISTENER
+//SMART CONTRACT EVENT LISTENER
+export const listenToEnteringEvent = (contractAddress: string) => {
+    const contract = new web3.eth.Contract(
+        gameContractABI,
+        contractAddress,
+    )
+    contract.events.CommitMade({}, () => {
 
+    })
+}
 
+export const listenToPhaseEvent = () => {
+
+}
+
+export const listenToStartingGameEvent = () => {
+
+}
 
 //WALLET FUNCTIONALITY
 export const connectWallet = async () => {
     if (window.ethereum) {
         try {
-            const adressArray: string[] = await window.ethereum.request({
+            const addressArray: string[] = await window.ethereum.request({
                 method: "eth_requestAccounts",
             });
             const obj = {
                 status: "Connected",
-                adress: adressArray[0],
+                address: addressArray[0],
             }
             return obj
         } catch (err: any) {
             return {
-                adress: "",
+                address: "",
                 status: "Uff...Error: " + err.message,
             }
         }
     } else {
         return {
-            adress: "",
+            address: "",
             status: "You must install MetaMask in your Browser",
         }
     }
@@ -179,23 +208,23 @@ export const getCurrentWalletConnected = async () => {
             });
             if (addressArray.length > 0) {
                 return {
-                    adress: addressArray[0],
+                    address: addressArray[0],
                 };
             } else {
                 return {
-                    adress: "",
+                    address: "",
                     status: "🦊 Connect to Metamask using the top right button.",
                 };
             }
         } catch (err: any) {
             return {
-                adress: "",
+                address: "",
                 status: "😥 " + err.message,
             };
         }
     } else {
         return {
-            adress: "",
+            address: "",
             status: "You must install MetaMask.",
         }
     }

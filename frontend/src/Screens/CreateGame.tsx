@@ -12,8 +12,8 @@ function CreateGame() {
     const navigate = useNavigate()
 
     async function fetchWallet() {
-        const { adress } = await getCurrentWalletConnected();
-        setWalletAdress(adress);
+        const { address } = await getCurrentWalletConnected();
+        setWalletAdress(address);
     }
     useEffect(() => {
         fetchWallet()
