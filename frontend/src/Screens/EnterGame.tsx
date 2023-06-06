@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { checkIfGameMaster, enterAGame, getCurrentPlayerCount, getCurrentWalletConnected, getGameDetails, getMyGuess } from '../utils/interact';
+import { checkForParticipation, checkIfGameMaster, enterAGame, getCurrentPlayerCount, getCurrentWalletConnected, getGameDetails, getMyGuess } from '../utils/interact';
 
 interface TGameDetails {
     entryFee: string,
@@ -46,14 +46,15 @@ function EnterGame() {
     useEffect(() => {
         const fetchGameMasterInfo = async () => {
             const masterState = await checkIfGameMaster(walletAdress, location.state.from)
-            if (masterState) setIsMaster(true)
-            else setIsMaster(false);
+            setIsMaster(masterState)
             console.log("masterState changed", masterState)
         }
-        fetchGameMasterInfo();
         const fetchParticipationInfo = async () => {
-
+            await checkForParticipation(walletAdress, location.state.from);
+            //setHasEntered(participationState);
         }
+        fetchGameMasterInfo();
+        fetchParticipationInfo();
     }, [walletAdress, location])
 
     useEffect(() => {
@@ -77,7 +78,7 @@ function EnterGame() {
             return {
                 status: "Invalid Guess."
             }
-        } else if (guess && walletAdress.length > 0) {
+        } else if (guess && salt && walletAdress.length > 0) {
             enterAGame(gameAdress, walletAdress, guess, salt).then(() => {
                 setHasEntered(true);
             })
@@ -99,24 +100,30 @@ function EnterGame() {
             </Link>
             {gameDetails ? (
                 <>
-                    <section className="flex evenly width100">
-                        <div className="details flexstart">
-                            <p>Contract:</p>
-                            <p>
-                                {
+                    <section className="flex evenly width100 height100">
+                        <section>
+                            <div className="flexstart textfield bordergreen">
+                                <p>Contract Info (<a href={`https://sepolia.etherscan.io/address/${gameAdress}`} target="_blank">show on etherscan</a>)</p>
+                                <p> address: {
                                     String(gameAdress).substring(0, 6) +
                                     "..." +
                                     String(gameAdress).substring(38)
                                 }
-                            </p>
-                            <br />
-                            <a href={`https://sepolia.etherscan.io/address/${gameAdress}`} target="_blank">show on Etherscan</a>
-                        </div>
-                        <div className="enterfee">
-                            <p>current players: <span className="importantnr">{pCount}</span></p>
-                            <p>You play against multiple other Players. (min. {gameDetails.minPlayers}) </p>
-                            <p>You all enter a guess between <span className="importantnr">{gameDetails.minGuess}</span> - <span className="importantnr">{gameDetails.maxGuess}</span>.</p>
-                            <p>The person with the closest guess to <br /> <b>66.6% of the intersection of all guesses</b><br /> wins the price.</p>
+                                </p>
+                                <p>current players: <span className="importantnr">{pCount}</span></p>
+                                <p>min.: <span className="importantnr">{gameDetails.minPlayers}</span></p>
+                            </div>
+                            <div className="textfield bordergreen">
+                                <h3 className="secondarytext">RULES</h3>
+                                <div className="bordergold glowy round">
+                                    <p className="padding20">The person with the closest guess to <br /> <b><span className="secondarytext">66.6% of the intersection</span> of all guesses</b><br /> wins the price.</p>
+                                </div>
+                                <p>All players enter a <b>guess</b> between <span className="importantnr">{gameDetails.minGuess}</span> - <span className="importantnr">{gameDetails.maxGuess}</span>.</p>
+                                <p>To keep your guess hidden from the other players, you will enter a <b>salt number</b> as well. The salt number makes it impossible to read your guess from the blockchain transaction.</p>
+                                <p><span className="secondarytext">Hold on to your Guess and your Salt.</span> You will have to enter them again in the reveal phase.</p>
+                            </div>
+                        </section>
+                        <div className="textfield bordergold glowy">
                             <br />
                             {hasEntered ?
                                 <>
@@ -128,25 +135,25 @@ function EnterGame() {
                                 :
                                 <>
                                     <section className="flex evenly">
-                                        <div>
-                                            <h3 className="primarytext">guess: </h3>
+                                        <div className="padding20">
+                                            <h3 className="primarytext padding20">guess: </h3>
                                             <form className="form-group">
                                                 <input type="number" id="input" className="form-input" onChange={changeGuess} />
                                             </form>
                                         </div>
-                                        <div>
-                                            <h3 className="secondarytext">salt: </h3>
+                                        <div className="padding20">
+                                            <h3 className="secondarytext padding20">salt: </h3>
                                             <form className="form-group">
-                                                <input type="number" id="input" className="form-input" onChange={changeSalt} />
+                                                <input type="number" id="input" className="form-input" placeholder="bsp: 1234" onChange={changeSalt} />
                                             </form>
                                         </div>
                                     </section>
-                                    <div className="flex">
+                                    <div className="flex padding20">
                                         <h3 className='margin'>entry fee: </h3>
                                         <span className='importantnr'> {gameDetails.entryFee}</span>
                                         <div id="eth_logo"></div>
                                     </div>
-                                    <button className="btn" onClick={submitGuess}>Play</button>
+                                    <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>Play</button>
                                 </>
                             }
                         </div>

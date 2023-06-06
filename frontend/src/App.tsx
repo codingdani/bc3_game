@@ -44,18 +44,16 @@ function App() {
   return (
 
     <div className="App">
-      <header>
-        <button id="connectwalletbtn" className="btn" onClick={connectWalletPressed}>
-          {walletAddress && walletAddress.length > 0 ? (
-            "Connected: " +
-            String(walletAddress).substring(0, 6) +
-            "..." +
-            String(walletAddress).substring(38)
-          ) : (
-            <span>Connect Wallet</span>
-          )}
-        </button>
-      </header>
+      <button id="connectwalletbtn" className="btn" onClick={connectWalletPressed}>
+        {walletAddress && walletAddress.length > 0 ? (
+          "Connected: " +
+          String(walletAddress).substring(0, 6) +
+          "..." +
+          String(walletAddress).substring(38)
+        ) : (
+          <span>Connect Wallet</span>
+        )}
+      </button>
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/creategame" element={<CreateGame />} />

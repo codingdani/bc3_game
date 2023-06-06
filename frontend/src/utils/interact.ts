@@ -1,19 +1,19 @@
 const infuraKey = "b6b652a41f604aadb527654f04bed96c";
 const gameContractABI = require('../guessing_game_abi.json');
 const factoryContractABI = require('../factory_abi.json');
-const factoryAdress: string = "0x60A59e365386d1462e1700a70480a45a154551F6";
+const factoryAdress: string = "0xdd5D7974de4cb4FCF16ab3b30362536a06900d17";
 
 const Web3 = require('web3');
 const web3 = new Web3(
     new Web3.providers.HttpProvider(`https://sepolia.infura.io/v3/${infuraKey}`)
 );
 
-//CONTRACTS
+//CONTRACT
 const factoryContract = new web3.eth.Contract(
     factoryContractABI,
     factoryAdress,
 );
-
+//FETCH OPEN GAMES
 const getAllGameMasters = async () => {
     return await factoryContract.methods.getMasters().call();
 }
@@ -26,7 +26,7 @@ export const getAllCurrentGames = async () => {
     }
     return gameArray;
 }
-
+//GAME INTERACTION
 export const createGame = async (
     adress: string,
     minGuess: number,
@@ -64,7 +64,8 @@ export const enterAGame = async (contract: string, wallet: string, guess: number
             status: "💡 Connect your Metamask wallet to update the message on the blockchain."
         }
     }
-    const _hash = web3.utils.soliditySha3(guess, salt);
+    const _hash = web3.utils.soliditySha3(3, 100);
+    console.log("hash commit", _hash)
     const gameContract = await new web3.eth.Contract(
         gameContractABI,
         contract,
@@ -120,14 +121,15 @@ export const getMyGuess = async (adress: string) => {
     console.log(myGuess)
     return myGuess;
 }
-
+//INFO FOR STATE TO RENDER PAGES ACCORDINGLY
 export const checkForParticipation = async (address: string, contractAddress: string) => {
     const contract = new web3.eth.Contract(
         gameContractABI,
         contractAddress
     )
-    const playersArray: string[] = await contract.methods.players().call();
-    return playersArray.includes(address);
+    const playersArray: string[] = await contract.methods.getPlayers().call();
+    console.log("participating?", playersArray);
+    //return playersArray.includes(address);
 }
 
 export const checkIfGameMaster = async (address: string, contractAddress: string) => {
@@ -136,12 +138,14 @@ export const checkIfGameMaster = async (address: string, contractAddress: string
         contractAddress,
     )
     const contractOwner: string = await contract.methods.owner().call();
-    console.log("gamemaster", contractOwner);
-    console.log("vergleichr", address);
     return contractOwner.trim().toLowerCase() === address.trim().toLowerCase() ? true : false;
 }
 
-//WALLET
+//EVENT LISTENER
+
+
+
+//WALLET FUNCTIONALITY
 export const connectWallet = async () => {
     if (window.ethereum) {
         try {

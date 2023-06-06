@@ -33,7 +33,8 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 input[type=number]:focus {
-  border: 3px solid rgb(181, 167, 2);
+  border: 2px solid rgb(181, 167, 2);
+  box-shadow: 1px 1px 5px 3px rgb(195, 195, 195);
 }
 
 input {
@@ -43,10 +44,12 @@ input {
   font-style: bold;
   text-align: center;
   border-radius: 5px;
+  font-size: 1.2rem;
 }
 
 .App {
   font-family: BrunoAceSC;
+  padding-top: 80px;
   z-index: 1;
   height: 100vh;
   width: 100vw;
@@ -58,10 +61,12 @@ input {
   background-size: 900px;
   text-align: center;
   position: relative;
+  top: 0;
   display: flex;
   align-items: center;
-  justify-content: space-evenly;
+  justify-content: center;
   flex-direction: column;
+  overflow-y: scroll;
 }
 
 header {
@@ -86,16 +91,9 @@ header {
   opacity: 0.7;
 }
 
-.details {
-  font-size: 0.8rem;
-  width: 300px;
-  padding: 10px;
-  margin: 0 5px;
-}
-
 h1 {
   position: absolute;
-  top: 15%;
+  top: 19%;
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 5rem;
@@ -103,14 +101,14 @@ h1 {
 
 #winnertext {
   position: absolute;
-  top: 242px;
+  top: 280px;
   left: 50%;
   transform: translate(-50%, -50%);
 }
 
 h2 {
   position: absolute;
-  top: 13%;
+  top: 17%;
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 3rem;
@@ -128,62 +126,31 @@ h2 {
   align-self: center;
 }
 
-.container1,
-.container2,
-.container3,
-.container4 {
-  display: flex;
-  position: absolute;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-}
-
-.container1>*,
-.container2>*,
-.container3>*,
-.container4>* {
-  margin: 0 10px;
-}
-
-
-.container1 {
-  top: 30%;
-}
-
-.container2 {
-  top: 40%;
-}
-
-.container3 {
-  top: 50%;
-}
-
-.container4 {
-  top: 60%;
-}
-
 .btn,
-.enterfee>.btn {
+.textfield>.btn {
   all: unset;
-  border-radius: 10px;
-  color: rgb(0, 0, 0);
+  border-radius: 3px;
+  color: rgb(25, 25, 25);
   font-family: inherit;
   font-size: 1.3rem;
-  padding: 12px 30px;
-  background-color: rgb(255, 254, 245);
+  padding: 8px 25px;
+  background-color: rgb(215, 215, 215);
   cursor: pointer;
   border: none;
-  box-shadow: 1px 1px 1px 1px rgb(195, 195, 195);
-  border: 1px solid rgb(195, 195, 195);
+  /* border: 1px solid rgb(195, 195, 195); */
 }
 
 .btn:hover,
-.enterfee>.btn:hover {
-  box-shadow: 1px 1px 1px 1px rgba(181, 167, 1, 0.686);
-  border: 1px solid rgb(181, 167, 2);
-  color: white;
+.textfield>.btn:hover {
+  box-shadow: 0px 0px 15px 6px rgba(211, 1, 1, 0.325);
+  color: rgb(234, 234, 234);
+  border: 1px solid rgb(181, 2, 1);
   background-color: rgb(109, 2, 1);
+}
+
+#buttonintextfield {
+  margin-top: 10px;
+  margin-bottom: 50px;
 }
 
 #creategamebtn {
@@ -200,14 +167,14 @@ h2 {
 
 #connectwalletbtn {
   z-index: 100;
-  position: absolute;
+  position: fixed;
   font-size: 1.1rem;
   top: 3%;
   right: 2%;
 }
 
 #backbtn {
-  position: absolute;
+  position: fixed;
   top: 3%;
   left: 2%;
 }
@@ -246,34 +213,37 @@ h2 {
   transition: 0.4s;
   height: 150px;
   width: 400px;
+  box-shadow: 0px 0px 10px 1px rgba(236, 213, 9, 0.512);
+
 }
 
 .gamecontainer:hover {
   transform: scale(1.1);
   cursor: pointer;
   color: black;
-  background-color: white;
+  background-color: rgba(217, 217, 217, 0.967);
   border: 2px solid rgb(181, 167, 2);
+
 }
 
 .gamecontainer>* {
   padding: 3px 10px 15px 10px;
 }
 
-.enterfee {
+.textfield {
   margin-bottom: 2%;
-  min-width: 600px;
+  width: 600px;
   padding: 1% 3%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  font-size: 0.9rem;
   background-color: rgb(54, 54, 54);
   border-radius: 8px;
-  border: 2px solid rgb(181, 167, 2);
 }
 
-.enterfee>* {
+.textfield>* {
   margin: 10px;
   padding: 5px;
 }
@@ -337,6 +307,10 @@ h2 {
   width: 100%;
 }
 
+.height100 {
+  height: 100%;
+}
+
 .evenly {
   justify-content: space-evenly;
 }
@@ -353,6 +327,46 @@ h2 {
   align-self: flex-start;
 }
 
+.bordergold {
+  border: 2px solid rgb(181, 167, 2);
+  box-shadow: 0px 0px 60px 1px rgba(236, 213, 9, 0.512);
+
+}
+
+.bordergreen {
+  border: 2px solid rgb(74, 181, 2);
+}
+
+.borderred {
+  border: 2px solid rgb(74, 181, 2);
+
+}
+
 .column {
   flex-direction: column;
+}
+
+.transform {
+  transform: translate(15px, 0);
+}
+
+.margintp {
+  margin-top: 200px;
+  margin-bottom: 20px;
+}
+
+.padding20 {
+  padding: 20px 20px 20px 20px;
+}
+
+.glowy {
+  box-shadow: 0px 0px 6px 1px rgb(236, 213, 9);
+}
+
+.glowr {
+  box-shadow: 0px 0px 6px 1px rgb(147, 3, 1);
+}
+
+.round {
+  border-radius: 5px;
 }
