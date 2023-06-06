@@ -19,6 +19,7 @@ function EnterGame() {
     const [salt, setSalt] = useState<number>(0);
     const [pCount, setPCount] = useState<number>();
     const [isMaster, setIsMaster] = useState<boolean>(false);
+    //add different rendering option; Start Game Button and Contract Balance instead of RULES
     const [hasEntered, setHasEntered] = useState<boolean>(false);
 
     const callData = async (adress: string) => {
@@ -51,8 +52,10 @@ function EnterGame() {
         }
         const fetchParticipationInfo = async () => {
             const participationState = await checkForParticipation(walletAdress, location.state.from);
-            //setHasEntered(participationState);
+            setHasEntered(participationState);
+            console.log("participating?", participationState)
         }
+
         fetchGameMasterInfo();
         fetchParticipationInfo();
     }, [walletAdress, location])
@@ -126,10 +129,9 @@ function EnterGame() {
                             <br />
                             {hasEntered ?
                                 <>
-                                    <h3>the game has not started yet...</h3>
-                                    <button className="btn" onClick={() => {
-                                        console.log("game adress", gameAdress)
-                                    }}>get my guess</button>
+                                    <h3>you have committed a <span className="primarytext">guess</span> and <span className="secondarytext">salt</span>.</h3>
+                                    <p>hold on to your numbers.</p>
+                                    <p>waiting for reaveal phase...</p>
                                 </>
                                 :
                                 <>

@@ -15,7 +15,6 @@ const factoryContract = new web3.eth.Contract(
     factoryContractABI,
     factoryAdress,
 );
-
 const createGameContractInstance = (address: string) => {
     const contract = new web3.eth.Contract(
         gameContractABI,
@@ -143,6 +142,7 @@ export const checkForParticipation = async (address: string, contractAddress: st
     playersArray.map((string) => {
         lowerCaseArray.push(string.trim().toLowerCase())
     });
+    console.log("in interact participating", lowerCaseArray.includes(address.trim().toLowerCase()))
     return lowerCaseArray.includes(address.trim().toLowerCase());
 }
 
@@ -152,6 +152,7 @@ export const checkIfGameMaster = async (address: string, contractAddress: string
         contractAddress,
     )
     const contractOwner: string = await contract.methods.owner().call();
+    console.log("in interact game master", contractOwner.trim().toLowerCase() === address.trim().toLowerCase())
     return contractOwner.trim().toLowerCase() === address.trim().toLowerCase() ? true : false;
 }
 
