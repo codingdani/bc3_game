@@ -4,6 +4,7 @@ import CreateGame from './Screens/CreateGame';
 import CurrentOpenGames from './Screens/CurrentOpenGames';
 import EnterGame from './Screens/EnterGame';
 import HomeScreen from './Screens/HomeScreen';
+import RevealPhaseScreen from './Screens/RevealPhaseScreen';
 import { connectWallet, getCurrentWalletConnected } from "./utils/interact";
 
 
@@ -57,8 +58,9 @@ function App() {
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/creategame" element={<CreateGame />} />
-        <Route path="/entergame/:adress" element={<EnterGame />} />
+        <Route path="/entergame/:address" element={<EnterGame />} />
         <Route path="/opengames" element={<CurrentOpenGames />} />
+        <Route path="/revealphase/:address" element={<RevealPhaseScreen />} />
       </Routes>
     </div>
   );
