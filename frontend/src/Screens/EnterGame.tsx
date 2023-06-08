@@ -29,19 +29,9 @@ function EnterGame() {
     const [salt, setSalt] = useState<number>(0);
     const [pCount, setPCount] = useState<number>();
     const [isMaster, setIsMaster] = useState<boolean>(false);
-    //add different rendering option; Start Game Button and Contract Balance instead of RULES
     const [hasEntered, setHasEntered] = useState<boolean>(false);
-    const [isReveal, setIsReveal] = useState<boolean>(false);
-
-    const callGameData = async (adress: string) => {
-        const game = await getGameDetails(adress);
-        setGameDetails({
-            entryFee: game.entryFee,
-            maxGuess: game.maxGuess,
-            minGuess: game.minGuess,
-            minPlayers: game.minPlayers
-        })
-    }
+    const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
+    const [isReveal, setIsReveal] = useState<boolean>(true);
 
     useEffect(() => {
         async function fetchWallet() {
@@ -52,7 +42,7 @@ function EnterGame() {
     }, []);
 
     useEffect(() => {
-        if (location.state.from) {
+        if (location.state.from && gameAddress != location.state.from) {
             callGameData(location.state.from);
             setGameAddress(location.state.from);
             const fetchCurrentPlayerCount = async () => {
@@ -60,7 +50,8 @@ function EnterGame() {
                 setPCount(count);
             }
             fetchCurrentPlayerCount();
-            scCommitListener(location.state.from);
+            scCommitEventListener(location.state.from);
+            scRevealEventListener(location.state.from);
         };
         const fetchGameMasterInfo = async () => {
             const masterState = await checkIfGameMaster(walletAddress, location.state.from)
@@ -72,26 +63,50 @@ function EnterGame() {
         };
         fetchGameMasterInfo();
         fetchParticipationInfo();
+        if (gameDetails) {
+            navigate(`/revealphase/${gameAddress}`, {
+                state: {
+                    gameDetails: gameDetails,
+                    gameAddress: gameAddress,
+                }
+            })
+        };
     }, [walletAddress, location]);
 
-    function scCommitListener(address: string) {
+    const callGameData = async (adress: string) => {
+        const game = await getGameDetails(adress);
+        setGameDetails({
+            entryFee: game.entryFee,
+            maxGuess: game.maxGuess,
+            minGuess: game.minGuess,
+            minPlayers: game.minPlayers
+        })
+    }
+
+    function scCommitEventListener(address: string) {
         const contract = createGameContractInstance(address);
         contract.events.CommitMade({}, (error: Error) => {
             if (error) console.log(error.message);
             else {
-                console.log("player entered the contract");
                 const fetchCurrentPlayerCount = async () => {
                     const count = await getCurrentPlayerCount(location.state.from);
                     setPCount(count);
                 };
                 fetchCurrentPlayerCount();
+                setNewPlayerEntered(true);
+                setTimeout(() => {
+                    setNewPlayerEntered(false);
+                }, 5000);
             };
         });
     };
 
-    function scRevealListener(address: string) {
+    function scRevealEventListener(address: string) {
         const contract = createGameContractInstance(address);
-        contract.events.RevealStart()
+        contract.events.RevealStart({}, (error: Error) => {
+            if (error) console.log(error.message);
+            else setIsReveal(true);
+        });
     }
 
     const changeGuess = ({ target }: any) => {
@@ -108,8 +123,8 @@ function EnterGame() {
                 status: "Invalid Guess."
             }
         } else if (guess && salt && walletAddress.length > 0) {
-            enterAGame(gameAddress, walletAddress, guess, salt).then(() => {
-                setHasEntered(true);
+            enterAGame(gameAddress, walletAddress, guess, salt).then((res) => {
+                if (res.confirmed == true) setHasEntered(true);
             })
             return {
                 status: "Transaction went through."
@@ -127,6 +142,7 @@ function EnterGame() {
             <Link to="/opengames" id="backbtn" className="btn">
                 back
             </Link>
+            {newPlayerEntered ? <p>a player has entered the game</p> : null}
             {gameDetails ? (
                 <>
                     <section className="flex evenly width100 height100">
@@ -152,15 +168,36 @@ function EnterGame() {
                             </div>
                         </section>
                         <section>
+                            {isMaster ?
+                                <>
+                                    <div className="textfield bordergold glowy">
+                                        <h3>you are the game master</h3>
+                                        <p><b>Condition</b>: min. player count reached.</p>
+                                        <button className="btn padding20">start game</button>
+                                        <p>Once the condition is met, the game will start automatically in 7 days or you can start it manually.</p>
+                                    </div>
+                                </>
+                                : null
+                            }
                             <div className="textfield bordergold glowy">
                                 <br />
-
+                                <h3>commit phase</h3>
                                 {hasEntered ?
                                     <>
                                         <h3>you have committed a <span className="primarytext">guess</span> and <span className="secondarytext">salt</span>.</h3>
                                         <p>hold on to your numbers.</p>
-                                        <img src={loading} id="loadinggifsmall"></img>
-                                        <p>waiting for the reaveal phase...</p>
+                                        {isReveal ?
+                                            <>
+                                                <br />
+                                                <button className="btn" onClick={() => navigate(`/revealphase/${gameAddress}`, { state: { gameDetails, gameAddress } })}>Enter the Reveal Phase</button>
+                                                <br />
+                                            </>
+                                            :
+                                            <>
+                                                <img src={loading} id="loadinggifsmall"></img>
+                                                <p>waiting for the reaveal phase...</p>
+                                            </>
+                                        }
                                     </>
                                     :
                                     <>
@@ -183,20 +220,10 @@ function EnterGame() {
                                             <span className='importantnr'> {gameDetails.entryFee}</span>
                                             <div id="eth_logo"></div>
                                         </div>
-                                        <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>Play</button>
+                                        <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>commit</button>
                                     </>
                                 }
                             </div>
-                            {isMaster ?
-                                <>
-                                    <div className="textfield bordergold glowy">
-                                        <button className="btn padding20">start game</button>
-                                        <p><b>Condition</b>: min. player count reached.</p>
-                                        <p>When the condition is met, the game will start automatically in 7 days. You can also start it manually at any time, if the condition is met.</p>
-                                    </div>
-                                </>
-                                : null
-                            }
                         </section>
                     </section>
                 </>) : null}
