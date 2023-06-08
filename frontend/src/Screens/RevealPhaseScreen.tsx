@@ -1,16 +1,14 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom';
-import { enterAGame } from '../utils/interact';
+import { revealGuess } from '../utils/interact';
 
 function RevealPhaseScreen() {
 
     const { state } = useLocation();
-
-    const { gameDetails, gameAddress } = state;
+    const { gameDetails, gameAddress, walletAddress } = state;
 
     const [guess, setGuess] = useState<number>(0);
     const [salt, setSalt] = useState<number>(0);
-
 
     const changeGuess = ({ target }: any) => {
         setGuess(target.value);
@@ -19,24 +17,24 @@ function RevealPhaseScreen() {
         setSalt(target.value);
     }
 
-    // const submitGuess = () => {
-    //     if (guess > Number(gameDetails?.maxGuess) || guess < Number(gameDetails?.minGuess)) {
-    //         console.log("fail");
-    //         return {
-    //             status: "Invalid Guess."
-    //         }
-    //     } else if (guess && salt && walletAddress.length > 0) {
-    //         enterAGame(gameAddress, walletAddress, guess, salt)
-    //         return {
-    //             status: "Transaction went through."
-    //         }
-    //     } else {
-    //         console.log("fail");
-    //         return {
-    //             status: "There was a mistake",
-    //         }
-    //     }
-    // }
+    const submitGuess = () => {
+        if (guess > Number(gameDetails?.maxGuess) || guess < Number(gameDetails?.minGuess)) {
+            console.log("wrong guess entered")
+            return {
+                status: "Invalid Guess."
+            }
+        } else if (guess && salt && walletAddress.length > 0) {
+            revealGuess(gameAddress, walletAddress, guess, salt)
+            return {
+                status: "Transaction went through."
+            }
+        } else {
+            console.log("fail");
+            return {
+                status: "There was a mistake",
+            }
+        }
+    }
 
     return (
         <>
@@ -60,7 +58,7 @@ function RevealPhaseScreen() {
                         </form>
                     </div>
                 </section>
-                <button id="buttonintextfield" className="btn padding20" onClick={() => console.log("")}>reveal</button>
+                <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>reveal</button>
             </div>
         </>
     )

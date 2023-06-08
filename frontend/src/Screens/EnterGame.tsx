@@ -4,7 +4,7 @@ import {
     checkForParticipation,
     checkIfGameMaster,
     createGameContractInstance,
-    enterAGame,
+    enterGame,
     getCurrentPlayerCount,
     getCurrentWalletConnected,
     getGameDetails
@@ -27,11 +27,11 @@ function EnterGame() {
     const [gameDetails, setGameDetails] = useState<TGameDetails>();
     const [guess, setGuess] = useState<number>(0);
     const [salt, setSalt] = useState<number>(0);
-    const [pCount, setPCount] = useState<number>();
+    const [playerCount, setPlayerCount] = useState<number>();
     const [isMaster, setIsMaster] = useState<boolean>(false);
-    const [hasEntered, setHasEntered] = useState<boolean>(false);
+    const [hasCommitted, setHasCommitted] = useState<boolean>(false);
     const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
-    const [isReveal, setIsReveal] = useState<boolean>(true);
+    const [isRevealPhase, setIsRevealPhase] = useState<boolean>(true);
 
     useEffect(() => {
         async function fetchWallet() {
@@ -43,11 +43,11 @@ function EnterGame() {
 
     useEffect(() => {
         if (location.state.from && gameAddress != location.state.from) {
-            callGameData(location.state.from);
+            fetchGameData(location.state.from);
             setGameAddress(location.state.from);
             const fetchCurrentPlayerCount = async () => {
                 const count = await getCurrentPlayerCount(location.state.from);
-                setPCount(count);
+                setPlayerCount(count);
             }
             fetchCurrentPlayerCount();
             scCommitEventListener(location.state.from);
@@ -59,22 +59,14 @@ function EnterGame() {
         };
         const fetchParticipationInfo = async () => {
             const participationState = await checkForParticipation(walletAddress, location.state.from);
-            setHasEntered(participationState);
+            setHasCommitted(participationState);
         };
         fetchGameMasterInfo();
         fetchParticipationInfo();
-        if (gameDetails) {
-            navigate(`/revealphase/${gameAddress}`, {
-                state: {
-                    gameDetails: gameDetails,
-                    gameAddress: gameAddress,
-                }
-            })
-        };
     }, [walletAddress, location]);
 
-    const callGameData = async (adress: string) => {
-        const game = await getGameDetails(adress);
+    const fetchGameData = async (address: string) => {
+        const game = await getGameDetails(address);
         setGameDetails({
             entryFee: game.entryFee,
             maxGuess: game.maxGuess,
@@ -90,7 +82,7 @@ function EnterGame() {
             else {
                 const fetchCurrentPlayerCount = async () => {
                     const count = await getCurrentPlayerCount(location.state.from);
-                    setPCount(count);
+                    setPlayerCount(count);
                 };
                 fetchCurrentPlayerCount();
                 setNewPlayerEntered(true);
@@ -105,7 +97,7 @@ function EnterGame() {
         const contract = createGameContractInstance(address);
         contract.events.RevealStart({}, (error: Error) => {
             if (error) console.log(error.message);
-            else setIsReveal(true);
+            else setIsRevealPhase(true);
         });
     }
 
@@ -123,8 +115,8 @@ function EnterGame() {
                 status: "Invalid Guess."
             }
         } else if (guess && salt && walletAddress.length > 0) {
-            enterAGame(gameAddress, walletAddress, guess, salt).then((res) => {
-                if (res.confirmed == true) setHasEntered(true);
+            enterGame(gameAddress, walletAddress, guess, salt).then((res) => {
+                if (res.confirmed == true) setHasCommitted(true);
             })
             return {
                 status: "Transaction went through."
@@ -155,12 +147,12 @@ function EnterGame() {
                                     String(gameAddress).substring(38)
                                 }
                                 </p>
-                                <p>current players: <span className="importantnr">{pCount}</span>  min. players: <span className="importantnr">{gameDetails.minPlayers}</span></p>
+                                <p>current players: <span className="importantnr">{playerCount}</span>  min. players: <span className="importantnr">{gameDetails.minPlayers}</span></p>
                             </div>
                             <div className="textfield bordergreen">
                                 <h3 className="secondarytext">RULES</h3>
                                 <div className="bordergold glowy round">
-                                    <p className="padding20">The person with the closest guess to <br /> <b><span className="secondarytext">66.6% of the intersection</span> of all guesses</b><br /> wins the price.</p>
+                                    <p className="padding20">The player with the closest guess to <br /> <b><span className="secondarytext">66.6% of the intersection</span> of all guesses</b><br /> wins the price.</p>
                                 </div>
                                 <p>All players enter a <b>guess</b> between <span className="importantnr">{gameDetails.minGuess}</span> - <span className="importantnr">{gameDetails.maxGuess}</span>.</p>
                                 <p>To keep your guess hidden from the other players, you will enter a <b>salt number</b> as well. The salt number makes it impossible to read your guess from the blockchain transaction.</p>
@@ -173,7 +165,7 @@ function EnterGame() {
                                     <div className="textfield bordergold glowy">
                                         <h3>you are the game master</h3>
                                         <p><b>Condition</b>: min. player count reached.</p>
-                                        <button className="btn padding20">start game</button>
+                                        <button className="btn padding20">start reveal phase</button>
                                         <p>Once the condition is met, the game will start automatically in 7 days or you can start it manually.</p>
                                     </div>
                                 </>
@@ -182,14 +174,15 @@ function EnterGame() {
                             <div className="textfield bordergold glowy">
                                 <br />
                                 <h3>commit phase</h3>
-                                {hasEntered ?
+                                {hasCommitted ?
                                     <>
                                         <h3>you have committed a <span className="primarytext">guess</span> and <span className="secondarytext">salt</span>.</h3>
                                         <p>hold on to your numbers.</p>
-                                        {isReveal ?
+                                        {isRevealPhase ?
                                             <>
                                                 <br />
-                                                <button className="btn" onClick={() => navigate(`/revealphase/${gameAddress}`, { state: { gameDetails, gameAddress } })}>Enter the Reveal Phase</button>
+                                                <p>the reveal phase has started.</p>
+                                                <button className="btn" onClick={() => navigate(`/revealphase/${gameAddress}`, { state: { gameDetails, gameAddress, walletAddress } })}>enter reveal phase</button>
                                                 <br />
                                             </>
                                             :

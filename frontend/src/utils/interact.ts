@@ -76,7 +76,27 @@ export const createGame = async (
     };
 };
 
-export const enterAGame = async (
+export const getGameDetails = async (address: string) => {
+    const contract = createGameContractInstance(address);
+    const contractRules = await contract.methods.RULES().call();
+    const entryFeeFromWei = web3.utils.fromWei(contractRules.entryFee.toString(), "ether");
+    contractRules.entryFee = entryFeeFromWei;
+    return contractRules;
+};
+
+export const getCurrentPlayerCount = async (address: string) => {
+    const contract = createGameContractInstance(address);
+    const currentPlayerCount: number = await contract.methods.getPlayerCount().call();
+    return currentPlayerCount;
+};
+
+export const getMyGuess = async (address: string) => {
+    const contract = createGameContractInstance(address);
+    const myGuess = await contract.methods.getMyGuess().call();
+    return myGuess;
+};
+
+export const enterGame = async (
     contractAddress: string,
     wallet: string,
     guess: number,
@@ -88,12 +108,12 @@ export const enterAGame = async (
         };
     };
     const _commitHash = web3.utils.soliditySha3(guess, salt);
-    const gameContract = createGameContractInstance(contractAddress);
-    const gameRules = await gameContract.methods.RULES().call();
+    const contract = createGameContractInstance(contractAddress);
+    const gameRules = await contract.methods.RULES().call();
     const transactionParams = {
         to: contractAddress,
         from: wallet,
-        data: gameContract.methods.commitHash(_commitHash).encodeABI(),
+        data: contract.methods.commitHash(_commitHash).encodeABI(),
         value: web3.utils.toHex(gameRules.entryFee.toString()),
     };
     try {
@@ -113,24 +133,38 @@ export const enterAGame = async (
     };
 };
 
-export const getGameDetails = async (address: string) => {
-    const contract = createGameContractInstance(address);
-    const contractRules = await contract.methods.RULES().call();
-    const entryFeeFromWei = web3.utils.fromWei(contractRules.entryFee.toString(), "ether");
-    contractRules.entryFee = entryFeeFromWei;
-    return contractRules;
-};
-
-export const getCurrentPlayerCount = async (address: string) => {
-    const contract = createGameContractInstance(address);
-    const currentPlayerCount: number = await contract.methods.getPlayerCount().call();
-    return currentPlayerCount;
-};
-
-export const getMyGuess = async (address: string) => {
-    const contract = createGameContractInstance(address);
-    const myGuess = await contract.methods.getMyGuess().call();
-    return myGuess;
+export const revealGuess = async (
+    contractAddress: string,
+    wallet: string,
+    guess: number,
+    salt: number) => {
+    if (!window.ethereum || wallet === null || wallet === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
+        };
+    };
+    const contract = createGameContractInstance(contractAddress);
+    const transactionParams = {
+        to: contractAddress,
+        from: wallet,
+        data: contract.methods.reveal(guess, salt).encodeABI(),
+    }
+    try {
+        const txHash = await window.ethereum.request({
+            method: "eth_sendTransaction",
+            params: [transactionParams],
+        });
+        return {
+            confirmed: true,
+            status: `transaction sent. View it under https://sepolia.etherscan.io/tx/${txHash}`
+        };
+    } catch (error: any) {
+        return {
+            confirmed: false,
+            status: "There was an Error: " + error.message
+        };
+    };
 };
 
 //INFO FOR STATE TO RENDER PAGES ACCORDINGLY

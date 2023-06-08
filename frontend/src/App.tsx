@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import CreateGame from './Screens/CreateGame';
 import CurrentOpenGames from './Screens/CurrentOpenGames';
 import EnterGame from './Screens/EnterGame';
@@ -9,6 +9,8 @@ import { connectWallet, getCurrentWalletConnected } from "./utils/interact";
 
 
 function App() {
+
+  const navigate = useNavigate();
 
   const [walletAddress, setWallet] = useState<string>();
 
@@ -27,6 +29,7 @@ function App() {
         }
         else {
           setWallet("");
+          navigate('/');
         }
       });
     };
