@@ -20,12 +20,12 @@ export const createGameContractInstance = (address: string) => {
         gameContractABI,
         address,
     );
-};
+}
 
 //FETCH OPEN GAMES
 const getAllGameMasters = async () => {
     return await factoryContract.methods.getMasters().call();
-};
+}
 export const getAllCurrentGames = async () => {
     const allGameMasters: string[] = await getAllGameMasters();
     const gameArray = [];
@@ -34,7 +34,7 @@ export const getAllCurrentGames = async () => {
         gameArray.push(...allGames);
     };
     return gameArray;
-};
+}
 
 //GAME INTERACTION
 export const createGame = async (
@@ -74,7 +74,28 @@ export const createGame = async (
             status: "There was an Error: " + error.message
         };
     };
-};
+}
+
+export const startRevealPhase = (contractAddress: string, wallet: string) => {
+    if (!window.ethereum || wallet === null || wallet === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
+        };
+    };
+    const contract = createGameContractInstance(contractAddress);
+    try {
+        contract.methods.startRevealPhase().call({ from: wallet })
+        return {
+            confirmed: true,
+        };
+    } catch (error: any) {
+        return {
+            confirmed: false,
+            status: "There was an Error: " + error.message,
+        };
+    };
+}
 
 export const getGameDetails = async (address: string) => {
     const contract = createGameContractInstance(address);
@@ -82,19 +103,19 @@ export const getGameDetails = async (address: string) => {
     const entryFeeFromWei = web3.utils.fromWei(contractRules.entryFee.toString(), "ether");
     contractRules.entryFee = entryFeeFromWei;
     return contractRules;
-};
+}
 
 export const getCurrentPlayerCount = async (address: string) => {
     const contract = createGameContractInstance(address);
     const currentPlayerCount: number = await contract.methods.getPlayerCount().call();
     return currentPlayerCount;
-};
+}
 
 export const getMyGuess = async (address: string) => {
     const contract = createGameContractInstance(address);
     const myGuess = await contract.methods.getMyGuess().call();
     return myGuess;
-};
+}
 
 export const enterGame = async (
     contractAddress: string,
@@ -131,7 +152,7 @@ export const enterGame = async (
             status: "There was an Error: " + error.message
         };
     };
-};
+}
 
 export const revealGuess = async (
     contractAddress: string,
@@ -165,7 +186,7 @@ export const revealGuess = async (
             status: "There was an Error: " + error.message
         };
     };
-};
+}
 
 //INFO FOR STATE TO RENDER PAGES ACCORDINGLY
 export const checkForParticipation = async (address: string, contractAddress: string) => {
@@ -176,13 +197,13 @@ export const checkForParticipation = async (address: string, contractAddress: st
         lowerCaseArray.push(string.trim().toLowerCase());
     });
     return lowerCaseArray.includes(address.trim().toLowerCase());
-};
+}
 
 export const checkIfGameMaster = async (address: string, contractAddress: string) => {
     const contract = createGameContractInstance(contractAddress);
     const contractOwner: string = await contract.methods.owner().call();
     return contractOwner.trim().toLowerCase() === address.trim().toLowerCase() ? true : false;
-};
+}
 
 //WALLET FUNCTIONALITY
 export const connectWallet = async () => {
@@ -208,7 +229,7 @@ export const connectWallet = async () => {
             status: "You must install MetaMask in your Browser",
         };
     };
-};
+}
 
 export const getCurrentWalletConnected = async () => {
     if (window.ethereum) {
@@ -238,4 +259,4 @@ export const getCurrentWalletConnected = async () => {
             status: "You must install MetaMask.",
         };
     };
-};
+}

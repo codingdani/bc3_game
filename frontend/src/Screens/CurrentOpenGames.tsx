@@ -20,8 +20,7 @@ function CurrentOpenGames() {
     useEffect(() => {
         setLoading(true);
         const fetchGameRules = async (openGames: string[]) => {
-            const gameDetailsArray: TGameDetails[] = []
-            // implement a for await for async iteration
+            const gameDetailsArray: TGameDetails[] = [];
             for (let i = 0; i < openGames.length; i++) {
                 await getGameDetails(openGames[i])
                     .then((res) => {
@@ -39,7 +38,7 @@ function CurrentOpenGames() {
             setLoading(false);
         }
         fetchGameRules(openGamesList);
-    }, [openGamesList])
+    }, [openGamesList]);
 
     useEffect(() => {
         const getGameList = async () => {
@@ -47,8 +46,8 @@ function CurrentOpenGames() {
             const currentGames = await getAllCurrentGames();
             setOpenGamesList(currentGames);
         };
-        getGameList()
-    }, [])
+        getGameList();
+    }, []);
 
     return (
         <>

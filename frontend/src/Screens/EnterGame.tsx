@@ -7,7 +7,8 @@ import {
     enterGame,
     getCurrentPlayerCount,
     getCurrentWalletConnected,
-    getGameDetails
+    getGameDetails,
+    startRevealPhase
 } from '../utils/interact';
 import loading from "../gif/loading-spinner.gif";
 interface TGameDetails {
@@ -31,7 +32,7 @@ function EnterGame() {
     const [isMaster, setIsMaster] = useState<boolean>(false);
     const [hasCommitted, setHasCommitted] = useState<boolean>(false);
     const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
-    const [isRevealPhase, setIsRevealPhase] = useState<boolean>(true);
+    const [isRevealPhase, setIsRevealPhase] = useState<boolean>(false);
 
     useEffect(() => {
         async function fetchWallet() {
@@ -91,7 +92,7 @@ function EnterGame() {
                 }, 5000);
             };
         });
-    };
+    }
 
     function scRevealEventListener(address: string) {
         const contract = createGameContractInstance(address);
@@ -113,20 +114,20 @@ function EnterGame() {
             console.log("fail");
             return {
                 status: "Invalid Guess."
-            }
+            };
         } else if (guess && salt && walletAddress.length > 0) {
             enterGame(gameAddress, walletAddress, guess, salt).then((res) => {
                 if (res.confirmed == true) setHasCommitted(true);
-            })
+            });
             return {
                 status: "Transaction went through."
-            }
+            };
         } else {
             console.log("fail");
             return {
                 status: "There was a mistake",
-            }
-        }
+            };
+        };
     }
 
     return (
@@ -164,9 +165,16 @@ function EnterGame() {
                                 <>
                                     <div className="textfield bordergold glowy">
                                         <h3>you are the game master</h3>
-                                        <p><b>Condition</b>: min. player count reached.</p>
-                                        <button className="btn padding20">start reveal phase</button>
-                                        <p>Once the condition is met, the game will start automatically in 7 days or you can start it manually.</p>
+                                        {isRevealPhase ?
+                                            <p>reveal phase has started.</p>
+                                            :
+                                            <>
+                                                <p><b>Condition</b>: min. player count reached.</p>
+                                                <button className="btn padding20" onClick={() => startRevealPhase(gameAddress, walletAddress)}>start reveal phase</button>
+                                                <p>Once the condition is met, the game will start automatically in 7 days or you can start it manually.</p>
+                                            </>
+
+                                        }
                                     </div>
                                 </>
                                 : null
@@ -182,7 +190,7 @@ function EnterGame() {
                                             <>
                                                 <br />
                                                 <p>the reveal phase has started.</p>
-                                                <button className="btn" onClick={() => navigate(`/revealphase/${gameAddress}`, { state: { gameDetails, gameAddress, walletAddress } })}>enter reveal phase</button>
+                                                <button className="btn" onClick={() => navigate(`/revealphase/${gameAddress}`, { state: { gameDetails, gameAddress, walletAddress, isMaster } })}>enter reveal phase</button>
                                                 <br />
                                             </>
                                             :

@@ -11,7 +11,7 @@ function HomeScreen() {
         async function fetchWallet() {
             const { address } = await getCurrentWalletConnected();
             setWalletAddress(address);
-        }
+        };
         async function addWalletListener() {
             if (window.ethereum) {
                 window.ethereum.on("accountsChanged", (accounts: any) => {
@@ -20,7 +20,7 @@ function HomeScreen() {
                     }
                     else {
                         setWalletAddress("");
-                    }
+                    };
                 });
             };
         };

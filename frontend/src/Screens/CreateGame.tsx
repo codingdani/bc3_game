@@ -5,6 +5,8 @@ import loadinggif from "../gif/loading-spinner.gif"
 
 function CreateGame() {
 
+    const navigate = useNavigate();
+
     const [walletAdress, setWalletAdress] = useState<string>("")
     const [minPlayerCount, setMinPlayerCount] = useState<number>(0);
     const [minGuess, setMinGuess] = useState<number>(0);
@@ -12,14 +14,12 @@ function CreateGame() {
     const [entryFee, setEntryFee] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
 
-    const navigate = useNavigate()
-
     useEffect(() => {
         async function fetchWallet() {
             const { address } = await getCurrentWalletConnected();
             setWalletAdress(address);
         }
-        fetchWallet()
+        fetchWallet();
     }, []);
 
     const changeMinGuess = ({ target }: any) => {
@@ -46,14 +46,14 @@ function CreateGame() {
                 if (res.confirmed == true) {
                     setTimeout(() => {
                         setLoading(false);
-                        navigate('/opengames')
-                    }, 4000);
+                        navigate('/opengames');
+                    }, 2000);
                 } else setLoading(false);
             });
         } else {
             setLoading(false);
             console.log("Pls fill the information correctly");
-        }
+        };
     }
 
     return (
