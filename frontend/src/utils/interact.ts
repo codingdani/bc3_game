@@ -97,6 +97,27 @@ export const startRevealPhase = (contractAddress: string, wallet: string) => {
     };
 }
 
+export const startGame = (contractAddress: string, wallet: string) => {
+    if (!window.ethereum || wallet === null || wallet === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
+        };
+    };
+    const contract = createGameContractInstance(contractAddress);
+    try {
+        contract.methods.finishGame().call({ from: wallet })
+        return {
+            confirmed: true,
+        };
+    } catch (error: any) {
+        return {
+            confirmed: false,
+            status: "There was an Error: " + error.message
+        }
+    }
+}
+
 export const getGameDetails = async (address: string) => {
     const contract = createGameContractInstance(address);
     const contractRules = await contract.methods.RULES().call();
@@ -111,11 +132,11 @@ export const getCurrentPlayerCount = async (address: string) => {
     return currentPlayerCount;
 }
 
-export const getMyGuess = async (address: string) => {
-    const contract = createGameContractInstance(address);
-    const myGuess = await contract.methods.getMyGuess().call();
-    return myGuess;
-}
+// export const getMyGuess = async (address: string) => {
+//     const contract = createGameContractInstance(address);
+//     const myGuess = await contract.methods.getMyGuess().call();
+//     return myGuess;
+// }
 
 export const enterGame = async (
     contractAddress: string,
@@ -203,6 +224,11 @@ export const checkIfGameMaster = async (address: string, contractAddress: string
     const contract = createGameContractInstance(contractAddress);
     const contractOwner: string = await contract.methods.owner().call();
     return contractOwner.trim().toLowerCase() === address.trim().toLowerCase() ? true : false;
+}
+
+export const checkIfGameStarted = async (contractAddress: string) => {
+    const contract = createGameContractInstance(contractAddress);
+    return await contract.methods.isStarted().call();
 }
 
 //WALLET FUNCTIONALITY
