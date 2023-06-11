@@ -1,29 +1,73 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { checkForParticipation, checkIfGameMaster, enterAGame, getCurrentPlayerCount, getCurrentWalletConnected, getGameDetails, getMyGuess } from '../utils/interact';
-
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import {
+    checkForParticipation,
+    checkIfGameMaster,
+    createGameContractInstance,
+    enterGame,
+    getCurrentPlayerCount,
+    getCurrentWalletConnected,
+    getGameDetails,
+    startRevealPhase
+} from '../utils/interact';
+import loading from "../gif/loading-spinner.gif";
 interface TGameDetails {
     entryFee: string,
     maxGuess: string,
     minGuess: string,
     minPlayers: string,
-}
+};
+
 function EnterGame() {
 
     const location = useLocation();
+    const navigate = useNavigate();
 
-    const [walletAdress, setWalletAdress] = useState("")
-    const [gameAdress, setGameAdress] = useState("");
-    const [gameDetails, setGameDetails] = useState<TGameDetails>()
+    const [walletAddress, setWalletAddress] = useState("");
+    const [gameAddress, setGameAddress] = useState("");
+    const [gameDetails, setGameDetails] = useState<TGameDetails>();
     const [guess, setGuess] = useState<number>(0);
     const [salt, setSalt] = useState<number>(0);
-    const [pCount, setPCount] = useState<number>();
+    const [playerCount, setPlayerCount] = useState<number>();
     const [isMaster, setIsMaster] = useState<boolean>(false);
-    //add different rendering option; Start Game Button and Contract Balance instead of RULES
-    const [hasEntered, setHasEntered] = useState<boolean>(false);
+    const [hasCommitted, setHasCommitted] = useState<boolean>(false);
+    const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
+    const [isRevealPhase, setIsRevealPhase] = useState<boolean>(false);
 
-    const callData = async (adress: string) => {
-        const game = await getGameDetails(adress);
+    useEffect(() => {
+        async function fetchWallet() {
+            const { address } = await getCurrentWalletConnected();
+            setWalletAddress(address);
+        };
+        fetchWallet();
+    }, []);
+
+    useEffect(() => {
+        if (location.state.from && gameAddress != location.state.from) {
+            fetchGameData(location.state.from);
+            setGameAddress(location.state.from);
+            const fetchCurrentPlayerCount = async () => {
+                const count = await getCurrentPlayerCount(location.state.from);
+                setPlayerCount(count);
+            }
+            fetchCurrentPlayerCount();
+            scCommitEventListener(location.state.from);
+            scRevealEventListener(location.state.from);
+        };
+        const fetchGameMasterInfo = async () => {
+            const masterState = await checkIfGameMaster(walletAddress, location.state.from)
+            setIsMaster(masterState);
+        };
+        const fetchParticipationInfo = async () => {
+            const participationState = await checkForParticipation(walletAddress, location.state.from);
+            setHasCommitted(participationState);
+        };
+        fetchGameMasterInfo();
+        fetchParticipationInfo();
+    }, [walletAddress, location]);
+
+    const fetchGameData = async (address: string) => {
+        const game = await getGameDetails(address);
         setGameDetails({
             entryFee: game.entryFee,
             maxGuess: game.maxGuess,
@@ -32,41 +76,31 @@ function EnterGame() {
         })
     }
 
-    useEffect(() => {
-        if (location.state.from) {
-            callData(location.state.from);
-            setGameAdress(location.state.from);
-            const fetchCurrentPlayerCount = async () => {
-                const count = await getCurrentPlayerCount(location.state.from);
-                setPCount(count);
-            }
-            fetchCurrentPlayerCount();
-        }
-    }, [location])
+    function scCommitEventListener(address: string) {
+        const contract = createGameContractInstance(address);
+        contract.events.CommitMade({}, (error: Error) => {
+            if (error) console.log(error.message);
+            else {
+                const fetchCurrentPlayerCount = async () => {
+                    const count = await getCurrentPlayerCount(location.state.from);
+                    setPlayerCount(count);
+                };
+                fetchCurrentPlayerCount();
+                setNewPlayerEntered(true);
+                setTimeout(() => {
+                    setNewPlayerEntered(false);
+                }, 5000);
+            };
+        });
+    }
 
-    useEffect(() => {
-        const fetchGameMasterInfo = async () => {
-            const masterState = await checkIfGameMaster(walletAdress, location.state.from)
-            setIsMaster(masterState)
-            console.log("masterState changed", masterState)
-        }
-        const fetchParticipationInfo = async () => {
-            const participationState = await checkForParticipation(walletAdress, location.state.from);
-            setHasEntered(participationState);
-            console.log("participating?", participationState)
-        }
-
-        fetchGameMasterInfo();
-        fetchParticipationInfo();
-    }, [walletAdress, location])
-
-    useEffect(() => {
-        async function fetchWallet() {
-            const { address } = await getCurrentWalletConnected();
-            setWalletAdress(address);
-        }
-        fetchWallet()
-    }, []);
+    function scRevealEventListener(address: string) {
+        const contract = createGameContractInstance(address);
+        contract.events.RevealStart({}, (error: Error) => {
+            if (error) console.log(error.message);
+            else setIsRevealPhase(true);
+        });
+    }
 
     const changeGuess = ({ target }: any) => {
         setGuess(target.value);
@@ -77,23 +111,23 @@ function EnterGame() {
 
     const submitGuess = () => {
         if (guess > Number(gameDetails?.maxGuess) || guess < Number(gameDetails?.minGuess)) {
-            console.log("fail")
+            console.log("fail");
             return {
                 status: "Invalid Guess."
-            }
-        } else if (guess && salt && walletAdress.length > 0) {
-            enterAGame(gameAdress, walletAdress, guess, salt).then(() => {
-                setHasEntered(true);
-            })
+            };
+        } else if (guess && salt && walletAddress.length > 0) {
+            enterGame(gameAddress, walletAddress, guess, salt).then((res) => {
+                if (res.confirmed == true) setHasCommitted(true);
+            });
             return {
                 status: "Transaction went through."
-            }
+            };
         } else {
-            console.log("fail")
+            console.log("fail");
             return {
                 status: "There was a mistake",
-            }
-        }
+            };
+        };
     }
 
     return (
@@ -101,63 +135,97 @@ function EnterGame() {
             <Link to="/opengames" id="backbtn" className="btn">
                 back
             </Link>
+            {newPlayerEntered ? <p>a player has entered the game</p> : null}
             {gameDetails ? (
                 <>
                     <section className="flex evenly width100 height100">
                         <section>
                             <div className="flexstart textfield bordergreen">
-                                <p>Contract Info (<a href={`https://sepolia.etherscan.io/address/${gameAdress}`} target="_blank">show on etherscan</a>)</p>
+                                <p>Contract Info (<a href={`https://sepolia.etherscan.io/address/${gameAddress}`} target="_blank">show on etherscan</a>)</p>
                                 <p> address: {
-                                    String(gameAdress).substring(0, 6) +
+                                    String(gameAddress).substring(0, 6) +
                                     "..." +
-                                    String(gameAdress).substring(38)
+                                    String(gameAddress).substring(38)
                                 }
                                 </p>
-                                <p>current players: <span className="importantnr">{pCount}</span>  min. players: <span className="importantnr">{gameDetails.minPlayers}</span></p>
+                                <p>current players: <span className="importantnr">{playerCount}</span>  min. players: <span className="importantnr">{gameDetails.minPlayers}</span></p>
                             </div>
                             <div className="textfield bordergreen">
                                 <h3 className="secondarytext">RULES</h3>
                                 <div className="bordergold glowy round">
-                                    <p className="padding20">The person with the closest guess to <br /> <b><span className="secondarytext">66.6% of the intersection</span> of all guesses</b><br /> wins the price.</p>
+                                    <p className="padding20">The player with the closest guess to <br /> <b><span className="secondarytext">66.6% of the intersection</span> of all guesses</b><br /> wins the price.</p>
                                 </div>
                                 <p>All players enter a <b>guess</b> between <span className="importantnr">{gameDetails.minGuess}</span> - <span className="importantnr">{gameDetails.maxGuess}</span>.</p>
                                 <p>To keep your guess hidden from the other players, you will enter a <b>salt number</b> as well. The salt number makes it impossible to read your guess from the blockchain transaction.</p>
                                 <p><span className="secondarytext">Hold on to your Guess and your Salt.</span> You will have to enter them again in the reveal phase.</p>
                             </div>
                         </section>
-                        <div className="textfield bordergold glowy">
-                            <br />
-                            {hasEntered ?
+                        <section>
+                            {isMaster ?
                                 <>
-                                    <h3>you have committed a <span className="primarytext">guess</span> and <span className="secondarytext">salt</span>.</h3>
-                                    <p>hold on to your numbers.</p>
-                                    <p>waiting for reaveal phase...</p>
-                                </>
-                                :
-                                <>
-                                    <section className="flex evenly">
-                                        <div className="padding20">
-                                            <h3 className="primarytext padding20">guess: </h3>
-                                            <form className="form-group">
-                                                <input type="number" id="input" className="form-input" onChange={changeGuess} />
-                                            </form>
-                                        </div>
-                                        <div className="padding20">
-                                            <h3 className="secondarytext padding20">salt: </h3>
-                                            <form className="form-group">
-                                                <input type="number" id="input" className="form-input" placeholder="bsp: 1234" onChange={changeSalt} />
-                                            </form>
-                                        </div>
-                                    </section>
-                                    <div className="flex padding20">
-                                        <h3 className='margin'>entry fee: </h3>
-                                        <span className='importantnr'> {gameDetails.entryFee}</span>
-                                        <div id="eth_logo"></div>
+                                    <div className="textfield bordergold glowy">
+                                        <h3>you are the game master</h3>
+                                        {isRevealPhase ?
+                                            <p>reveal phase has started.</p>
+                                            :
+                                            <>
+                                                <p><b>Condition</b>: min. player count reached.</p>
+                                                <button className="btn padding20" onClick={() => startRevealPhase(gameAddress, walletAddress)}>start reveal phase</button>
+                                                <p>Once the condition is met, the game will start automatically in 7 days or you can start it manually.</p>
+                                            </>
+
+                                        }
                                     </div>
-                                    <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>Play</button>
                                 </>
+                                : null
                             }
-                        </div>
+                            <div className="textfield bordergold glowy">
+                                <br />
+                                <h3>commit phase</h3>
+                                {hasCommitted ?
+                                    <>
+                                        <h3>you have committed a <span className="primarytext">guess</span> and <span className="secondarytext">salt</span>.</h3>
+                                        <p>hold on to your numbers.</p>
+                                        {isRevealPhase ?
+                                            <>
+                                                <br />
+                                                <p>the reveal phase has started.</p>
+                                                <button className="btn" onClick={() => navigate(`/revealphase/${gameAddress}`, { state: { gameDetails, gameAddress, walletAddress, isMaster } })}>enter reveal phase</button>
+                                                <br />
+                                            </>
+                                            :
+                                            <>
+                                                <img src={loading} id="loadinggifsmall"></img>
+                                                <p>waiting for the reaveal phase...</p>
+                                            </>
+                                        }
+                                    </>
+                                    :
+                                    <>
+                                        <section className="flex evenly">
+                                            <div className="padding20">
+                                                <h3 className="primarytext padding20">guess: </h3>
+                                                <form className="form-group">
+                                                    <input type="number" id="input" className="form-input" onChange={changeGuess} />
+                                                </form>
+                                            </div>
+                                            <div className="padding20">
+                                                <h3 className="secondarytext padding20">salt: </h3>
+                                                <form className="form-group">
+                                                    <input type="number" id="input" className="form-input" placeholder="bsp: 1234" onChange={changeSalt} />
+                                                </form>
+                                            </div>
+                                        </section>
+                                        <div className="flex padding20">
+                                            <h3 className='margin'>entry fee: </h3>
+                                            <span className='importantnr'> {gameDetails.entryFee}</span>
+                                            <div id="eth_logo"></div>
+                                        </div>
+                                        <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>commit</button>
+                                    </>
+                                }
+                            </div>
+                        </section>
                     </section>
                 </>) : null}
         </>

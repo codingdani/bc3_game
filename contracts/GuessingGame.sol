@@ -43,11 +43,12 @@ contract GuessingGame {
     address public owner;
 
     address public winner;
-    bool winnerHasWithdrawed;
+    bool winnerHasWithdrawn;
     uint256 winningAmount;
 
     bool isInit = false;
-    bool isStarted = false;
+    //genug um einen Getter zu haben und Variable im Frontend auslesen zu können?
+    bool public isStarted = false;
 
     function init(
         uint256 _minGuess,
@@ -87,10 +88,10 @@ contract GuessingGame {
         return players.length;
     }
 
-    function getMyGuess() public view returns (uint256) {
-        require(commits[msg.sender].revealed == true, "There is no guess.");
-        return commits[msg.sender].guess;
-    }
+    // function getMyGuess() public view returns (uint256) {
+    //     require(commits[msg.sender].revealed == true, "There is no guess.");
+    //     return commits[msg.sender].guess;
+    // }
 
     function commitHash(bytes32 _hash) public payable gameExpired {
         require(phase == Phase.Commit, "The commit phase is over.");
@@ -138,7 +139,10 @@ contract GuessingGame {
 
     function finishGame() public onlyOwner gameExpired {
         uint256 time = block.timestamp;
-        require(time > revealDeadline, "The reveal deadline isn't over yet.");
+        require(
+            time > revealDeadline || revealedPlayers == players.length,
+            "The reveal deadline isn't over yet."
+        );
         require(revealedPlayers != 0, "Nobody revealed their guess yet.");
         require(!isStarted, "Game already started");
         isStarted = true;
@@ -159,13 +163,13 @@ contract GuessingGame {
 
     function payout() public {
         require(winner == msg.sender, "You are not the winner.");
-        require(!winnerHasWithdrawed, "You already withdrawed your win.");
-        winnerHasWithdrawed = true;
+        require(!winnerHasWithdrawn, "You already withdrawed your win.");
+        winnerHasWithdrawn = true;
         payable(winner).transfer(winningAmount);
     }
 
     function retrieveWinningFee() public onlyOwner {
-        require(winnerHasWithdrawed, "The winner hasn't payout their win.");
+        require(winnerHasWithdrawn, "The winner hasn't payout their win.");
         require(address(this).balance > 0, "You already collected your fee.");
         payable(msg.sender).transfer(address(this).balance);
     }
