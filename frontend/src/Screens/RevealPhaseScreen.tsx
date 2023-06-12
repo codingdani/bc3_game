@@ -9,7 +9,7 @@ function RevealPhaseScreen() {
 
     const [guess, setGuess] = useState<number>(0);
     const [salt, setSalt] = useState<number>(0);
-    const [newReveal, setNewReveal] = useState<boolean>(true);
+    const [newReveal, setNewReveal] = useState<boolean>(false);
     const [allRevealed, setAllRevealed] = useState<boolean>(false);
 
     useEffect(() => {

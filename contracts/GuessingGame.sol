@@ -38,7 +38,7 @@ contract GuessingGame {
 
     /**************** Game calculation */
     uint256 sum;
-    uint256 revealedPlayers;
+    uint256 public revealedPlayers;
 
     address public owner;
 
@@ -83,11 +83,6 @@ contract GuessingGame {
     function getPlayerCount() public view returns (uint256) {
         return players.length;
     }
-
-    // function getMyGuess() public view returns (uint256) {
-    //     require(commits[msg.sender].revealed == true, "There is no guess.");
-    //     return commits[msg.sender].guess;
-    // }
 
     function commitHash(bytes32 _hash) public payable gameExpired {
         require(phase == Phase.Commit, "The commit phase is over.");

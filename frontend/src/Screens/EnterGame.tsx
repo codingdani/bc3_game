@@ -32,7 +32,7 @@ function EnterGame() {
     const [isMaster, setIsMaster] = useState<boolean>(false);
     const [hasCommitted, setHasCommitted] = useState<boolean>(false);
     const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
-    const [isRevealPhase, setIsRevealPhase] = useState<boolean>(false);
+    const [isRevealPhase, setIsRevealPhase] = useState<boolean>(true);
 
     useEffect(() => {
         async function fetchWallet() {
@@ -158,6 +158,7 @@ function EnterGame() {
                                 <p>All players enter a <b>guess</b> between <span className="importantnr">{gameDetails.minGuess}</span> - <span className="importantnr">{gameDetails.maxGuess}</span>.</p>
                                 <p>To keep your guess hidden from the other players, you will enter a <b>salt number</b> as well. The salt number makes it impossible to read your guess from the blockchain transaction.</p>
                                 <p><span className="secondarytext">Hold on to your Guess and your Salt.</span> You will have to enter them again in the reveal phase.</p>
+                                <p>Once the reveal phase has started, there is a <span className="primarytext">24 hours deadline</span> to commit your reveal. If you miss the deadline, you will be disqualified without payback.</p>
                             </div>
                         </section>
                         <section>
@@ -171,7 +172,7 @@ function EnterGame() {
                                             <>
                                                 <p><b>Condition</b>: min. player count reached.</p>
                                                 <button className="btn padding20" onClick={() => startRevealPhase(gameAddress, walletAddress)}>start reveal phase</button>
-                                                <p>Once the condition is met, the game will start automatically in 7 days or you can start it manually.</p>
+                                                <p>Once the condition is met, the game will start automatically in 24 hours or you can start it manually.</p>
                                             </>
 
                                         }

@@ -1,9 +1,9 @@
 //dotenv bug with typescript??
-
-const infuraKey = "b6b652a41f604aadb527654f04bed96c";
+//const infuraKey = "b6b652a41f604aadb527654f04bed96c";
+const infuraKey = process.env.REACT_APP_INFURA_KEY;
 const gameContractABI = require('../guessing_game_abi.json');
 const factoryContractABI = require('../factory_abi.json');
-const factoryAdress: string = "0xdd5D7974de4cb4FCF16ab3b30362536a06900d17";
+const factoryAdress = "0xdd5D7974de4cb4FCF16ab3b30362536a06900d17";
 
 const Web3 = require('web3');
 const web3 = new Web3(
@@ -76,7 +76,7 @@ export const createGame = async (
     };
 }
 
-export const startRevealPhase = (contractAddress: string, wallet: string) => {
+export const startRevealPhase = async (contractAddress: string, wallet: string) => {
     if (!window.ethereum || wallet === null || wallet === undefined) {
         return {
             confirmed: false,
@@ -85,7 +85,7 @@ export const startRevealPhase = (contractAddress: string, wallet: string) => {
     };
     const contract = createGameContractInstance(contractAddress);
     try {
-        contract.methods.startRevealPhase().call({ from: wallet })
+        await contract.methods.startRevealPhase().call({ from: wallet })
         return {
             confirmed: true,
         };
@@ -131,12 +131,6 @@ export const getCurrentPlayerCount = async (address: string) => {
     const currentPlayerCount: number = await contract.methods.getPlayerCount().call();
     return currentPlayerCount;
 }
-
-// export const getMyGuess = async (address: string) => {
-//     const contract = createGameContractInstance(address);
-//     const myGuess = await contract.methods.getMyGuess().call();
-//     return myGuess;
-// }
 
 export const enterGame = async (
     contractAddress: string,
