@@ -3,7 +3,7 @@
 const infuraKey = process.env.REACT_APP_INFURA_KEY;
 const gameContractABI = require('../guessing_game_abi.json');
 const factoryContractABI = require('../factory_abi.json');
-const factoryAdress = "0xdd5D7974de4cb4FCF16ab3b30362536a06900d17";
+const factoryAdress = "0xfc1D662189778B55fd2dA9144A5718B76108e613";
 
 const Web3 = require('web3');
 const web3 = new Web3(
