@@ -43,7 +43,7 @@ contract GuessingGame {
     address public owner;
 
     address public winner;
-    bool winnerHasWithdrawn;
+    bool public winnerHasWithdrawn;
     uint256 winningAmount;
 
     bool isInit = false;
@@ -166,8 +166,8 @@ contract GuessingGame {
     function retrieveWinningFee() public onlyOwner {
         require(winnerHasWithdrawn, "The winner hasn't payout their win.");
         require(address(this).balance > 0, "You already collected your fee.");
-        //deactivate Game??
         payable(msg.sender).transfer(address(this).balance);
+        //deactivate Game??
     }
 
     function calcWinningDiff(uint256 minDiff, uint256 target)
