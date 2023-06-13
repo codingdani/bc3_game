@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom';
-import { createGameContractInstance, revealGuess } from '../utils/interact';
+import { createGameContractInstance, revealGuess, startGame } from '../utils/interact';
 
 function RevealPhaseScreen() {
 
@@ -11,9 +11,17 @@ function RevealPhaseScreen() {
     const [salt, setSalt] = useState<number>(0);
     const [newReveal, setNewReveal] = useState<boolean>(false);
     const [allRevealed, setAllRevealed] = useState<boolean>(false);
+    const [isWinner, setIsWinner] = useState<boolean>(false);
+    const [gameIsFinished, setGameIsFinished] = useState<boolean>(false);
+    const [winnerAddress, setWinnerAddress] = useState<string>("");
+
+    //use revealedPlayers public unit256 to display how many have revealed their guess.
+
+    // like "x / players.length have revealed"
 
     useEffect(() => {
         scRevealMadeEventListener(gameAddress);
+        scWinnerDeclaredEventListener(gameAddress);
     }, []);
 
     function scRevealMadeEventListener(address: string) {
@@ -27,6 +35,23 @@ function RevealPhaseScreen() {
                 }, 5000);
             };
         });
+    }
+
+    function scWinnerDeclaredEventListener(address: string) {
+        const contract = createGameContractInstance(address);
+        contract.events.WinnerDeclared({}, (error: Error) => {
+            if (error) console.log("Error: ", error.message)
+            else {
+                setGameIsFinished(true);
+                fetchWinnerAddress(address);
+            }
+        })
+    }
+
+    const fetchWinnerAddress = async (address: string) => {
+        const contract = createGameContractInstance(address);
+        const winner = await contract.methods.winner().call();
+        setWinnerAddress(winner);
     }
 
     const changeGuess = ({ target }: any) => {
@@ -53,6 +78,11 @@ function RevealPhaseScreen() {
                 status: "There was a mistake",
             };
         };
+    }
+
+    const startLastPhase = () => {
+        //if alle revealed haben 
+        startGame(gameAddress, walletAddress);
     }
 
     return (
@@ -86,13 +116,16 @@ function RevealPhaseScreen() {
                     </section>
                     <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>reveal</button>
                 </div>
-                <div className="textfield bordergold glowy">
-                    <h3>you are the game master</h3>
-                    <p><b>Condition</b>: all players have revealed their guess.</p>
-                    <br />
-                    <button className="btn padding20">Start</button>
-                    <br />
-                </div>
+                {isMaster ?
+                    <div className="textfield bordergold glowy">
+                        <h3>you are the game master</h3>
+                        <p><b>Condition</b>: all players have revealed their guess.</p>
+                        <br />
+                        <button className="btn padding20" onClick={startLastPhase}>Start</button>
+                        <br />
+                    </div>
+                    : null
+                }
             </section>
         </>
     )

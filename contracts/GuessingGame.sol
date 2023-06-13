@@ -166,13 +166,15 @@ contract GuessingGame {
     function retrieveWinningFee() public onlyOwner {
         require(winnerHasWithdrawn, "The winner hasn't payout their win.");
         require(address(this).balance > 0, "You already collected your fee.");
+        //deactivate Game??
         payable(msg.sender).transfer(address(this).balance);
     }
 
-    function calcWinningDiff(
-        uint256 minDiff,
-        uint256 target
-    ) private view returns (uint256) {
+    function calcWinningDiff(uint256 minDiff, uint256 target)
+        private
+        view
+        returns (uint256)
+    {
         for (uint256 i = 0; i < players.length; i++) {
             if (
                 commits[players[i]].revealed == true &&
@@ -184,10 +186,11 @@ contract GuessingGame {
         return minDiff;
     }
 
-    function absDiff(
-        uint256 num1,
-        uint256 num2
-    ) private pure returns (uint256) {
+    function absDiff(uint256 num1, uint256 num2)
+        private
+        pure
+        returns (uint256)
+    {
         if (num1 >= num2) {
             return num1 - num2;
         } else {

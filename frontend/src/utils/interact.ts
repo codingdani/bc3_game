@@ -1,6 +1,9 @@
+import { transcode } from "buffer";
+import { encode } from "punycode";
+
 //dotenv bug with typescript??
-//const infuraKey = "b6b652a41f604aadb527654f04bed96c";
-const infuraKey = process.env.REACT_APP_INFURA_KEY;
+const infuraKey = "b6b652a41f604aadb527654f04bed96c";
+//const infuraKey = process.env.REACT_APP_INFURA_KEY;
 const gameContractABI = require('../guessing_game_abi.json');
 const factoryContractABI = require('../factory_abi.json');
 const factoryAdress = "0xfc1D662189778B55fd2dA9144A5718B76108e613";
@@ -84,20 +87,28 @@ export const startRevealPhase = async (contractAddress: string, wallet: string) 
         };
     };
     const contract = createGameContractInstance(contractAddress);
+    const transactionParams = {
+        to: contractAddress,
+        from: wallet,
+        data: contract.methods.startRevealPhase().encodeABI(),
+    }
     try {
-        await contract.methods.startRevealPhase().call({ from: wallet })
+        await window.ethereum.request({
+            method: "eth_sendTransaction",
+            params: [transactionParams],
+        });
         return {
             confirmed: true,
-        };
-    } catch (error: any) {
+        }
+    } catch (err: any) {
+        console.log("Failed, so ist die schreibweise falsch")
         return {
-            confirmed: false,
-            status: "There was an Error: " + error.message,
-        };
-    };
+            confirmed: false
+        }
+    }
 }
 
-export const startGame = (contractAddress: string, wallet: string) => {
+export const startGame = async (contractAddress: string, wallet: string) => {
     if (!window.ethereum || wallet === null || wallet === undefined) {
         return {
             confirmed: false,
@@ -105,15 +116,23 @@ export const startGame = (contractAddress: string, wallet: string) => {
         };
     };
     const contract = createGameContractInstance(contractAddress);
+    const transactionParams = {
+        to: contractAddress,
+        from: wallet,
+        data: contract.methods.finishGame().encodeABI(),
+    }
     try {
-        contract.methods.finishGame().call({ from: wallet })
+        await window.ethereum.request({
+            method: "eth_sendTransaction",
+            params: [transactionParams],
+        });
         return {
             confirmed: true,
-        };
-    } catch (error: any) {
+        }
+    } catch (err: any) {
+        console.log("Failed, so ist die schreibweise falsch")
         return {
-            confirmed: false,
-            status: "There was an Error: " + error.message
+            confirmed: false
         }
     }
 }
@@ -201,6 +220,36 @@ export const revealGuess = async (
             status: "There was an Error: " + error.message
         };
     };
+}
+
+export const claimWinnings = async (contractAddress: string, wallet: string) => {
+    if (!window.ethereum || wallet === null || wallet === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
+        };
+    };
+    const contract = createGameContractInstance(contractAddress);
+    const transactionsParams = {
+        to: contractAddress,
+        from: wallet,
+        data: contract.methods.payout().encodeABI(),
+    }
+    try {
+        const txHash = await window.ethereum.request({
+            method: "eth_sendTransaction",
+            params: [transactionsParams],
+        });
+        return {
+            confirmed: true,
+            status: `transaction sent. View it under https://sepolia.etherscan.io/tx/${txHash}`
+        }
+    } catch (err: any) {
+        console.log("Error: ", err.message)
+        return {
+            confirmed: false,
+        }
+    }
 }
 
 //INFO FOR STATE TO RENDER PAGES ACCORDINGLY
