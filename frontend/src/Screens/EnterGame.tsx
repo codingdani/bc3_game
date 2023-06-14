@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
     checkForParticipation,
+    checkForRevealPhase,
     checkIfGameMaster,
     createGameContractInstance,
     enterGame,
@@ -33,7 +34,6 @@ function EnterGame() {
     const [hasCommitted, setHasCommitted] = useState<boolean>(false);
     const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
     const [isRevealPhase, setIsRevealPhase] = useState<boolean>(false);
-    //if revealphase is true, no one can enter anymore. no rendering of input and submit button
 
     useEffect(() => {
         async function fetchWallet() {
@@ -50,7 +50,12 @@ function EnterGame() {
             const fetchCurrentPlayerCount = async () => {
                 const count = await getCurrentPlayerCount(location.state.from);
                 setPlayerCount(count);
-            }
+            };
+            const fetchGameStatus = async () => {
+                const status = await checkForRevealPhase(location.state.from);
+                setIsRevealPhase(status);
+            };
+            fetchGameStatus();
             fetchCurrentPlayerCount();
             scCommitEventListener(location.state.from);
             scRevealEventListener(location.state.from);
@@ -136,7 +141,7 @@ function EnterGame() {
             <Link to="/opengames" id="backbtn" className="btn">
                 back
             </Link>
-            {newPlayerEntered ? <p>a player has entered the game</p> : null}
+            {newPlayerEntered ? <p className="padding20">a player has entered the game</p> : null}
             {gameDetails ? (
                 <>
                     <section className="flex evenly width100 height100">
@@ -168,7 +173,15 @@ function EnterGame() {
                                     <div className="textfield bordergold glowy">
                                         <h3>you are the game master</h3>
                                         {isRevealPhase ?
-                                            <p>reveal phase has started.</p>
+                                            <>
+                                                <p>reveal phase has started.</p>
+                                                {hasCommitted ? null :
+                                                    <>
+                                                        <button className="btn" onClick={() => navigate(`/revealphase/${gameAddress}`, { state: { gameDetails, gameAddress, playerCount, walletAddress, isMaster } })}>observe reveal phase</button>
+                                                        <br />
+                                                    </>
+                                                }
+                                            </>
                                             :
                                             <>
                                                 <p><b>Condition</b>: min. player count reached.</p>
@@ -204,26 +217,32 @@ function EnterGame() {
                                     </>
                                     :
                                     <>
-                                        <section className="flex evenly">
-                                            <div className="padding20">
-                                                <h3 className="primarytext padding20">guess: </h3>
-                                                <form className="form-group">
-                                                    <input type="number" id="input" className="form-input" onChange={changeGuess} />
-                                                </form>
-                                            </div>
-                                            <div className="padding20">
-                                                <h3 className="secondarytext padding20">salt: </h3>
-                                                <form className="form-group">
-                                                    <input type="number" id="input" className="form-input" placeholder="bsp: 1234" onChange={changeSalt} />
-                                                </form>
-                                            </div>
-                                        </section>
-                                        <div className="flex padding20">
-                                            <h3 className='margin'>entry fee: </h3>
-                                            <span className='importantnr'> {gameDetails.entryFee}</span>
-                                            <div id="eth_logo"></div>
-                                        </div>
-                                        <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>commit</button>
+                                        {isRevealPhase ?
+                                            <p>this game has started already</p>
+                                            :
+                                            <>
+                                                <section className="flex evenly">
+                                                    <div className="padding20">
+                                                        <h3 className="primarytext padding20">guess: </h3>
+                                                        <form className="form-group">
+                                                            <input type="number" id="input" className="form-input" onChange={changeGuess} />
+                                                        </form>
+                                                    </div>
+                                                    <div className="padding20">
+                                                        <h3 className="secondarytext padding20">salt: </h3>
+                                                        <form className="form-group">
+                                                            <input type="number" id="input" className="form-input" placeholder="bsp: 1234" onChange={changeSalt} />
+                                                        </form>
+                                                    </div>
+                                                </section>
+                                                <div className="flex padding20">
+                                                    <h3 className='margin'>entry fee: </h3>
+                                                    <span className='importantnr'> {gameDetails.entryFee}</span>
+                                                    <div id="eth_logo"></div>
+                                                </div>
+                                                <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>commit</button>
+                                            </>
+                                        }
                                     </>
                                 }
                             </div>

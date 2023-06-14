@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom';
-import { createGameContractInstance, getRevealedPlayerCount, revealGuess, startGame } from '../utils/interact';
+import { checkIfGameStarted, checkIfPlayerHasRevealed, claimServiceFee, claimWinnings, createGameContractInstance, getRevealedPlayerCount, revealGuess, startGame } from '../utils/interact';
 import loading from "../gif/loading-spinner.gif";
 
 function RevealPhaseScreen() {
@@ -10,13 +10,13 @@ function RevealPhaseScreen() {
 
     const [guess, setGuess] = useState<number>(0);
     const [salt, setSalt] = useState<number>(0);
-    const [hasRevealed, setHasRevealed] = useState<boolean>(true);
+    const [hasRevealed, setHasRevealed] = useState<boolean>(false);
     const [newReveal, setNewReveal] = useState<boolean>(false);
     const [revealCount, setRevealCount] = useState<number>(0);
     const [allRevealed, setAllRevealed] = useState<boolean>(false);
-    const [gameIsFinished, setGameIsFinished] = useState<boolean>(true);
+    const [gameIsFinished, setGameIsFinished] = useState<boolean>(false);
     const [winnerAddress, setWinnerAddress] = useState<string>("");
-    const [isWinner, setIsWinner] = useState<boolean>(true);
+    const [isWinner, setIsWinner] = useState<boolean>(false);
 
     useEffect(() => {
         scRevealMadeEventListener(gameAddress);
@@ -25,12 +25,30 @@ function RevealPhaseScreen() {
             const count = await getRevealedPlayerCount(gameAddress);
             setRevealCount(count);
         }
+        const fetchIfHasRevealed = async () => {
+            const revealed = await checkIfPlayerHasRevealed(walletAddress, gameAddress);
+            setHasRevealed(revealed);
+        }
+        const fetchIfGameHasStarted = async () => {
+            const started = await checkIfGameStarted(gameAddress);
+            setGameIsFinished(started);
+        }
+        fetchIfHasRevealed();
         fetchCurrentRevealCount();
+        fetchIfGameHasStarted();
     }, []);
+
+    useEffect(() => {
+        if (gameIsFinished) fetchWinnerAddress(gameAddress);
+    }, [gameIsFinished])
 
     useEffect(() => {
         if (revealCount == playerCount) setAllRevealed(true);
     }, [revealCount])
+
+    useEffect(() => {
+        if (winnerAddress.trim().toLowerCase() == walletAddress.trim().toLowerCase()) setIsWinner(true);
+    }, [winnerAddress])
 
     function scRevealMadeEventListener(address: string) {
         const contract = createGameContractInstance(address);
@@ -70,7 +88,7 @@ function RevealPhaseScreen() {
             return {
                 status: "Invalid Guess."
             };
-        } else if (guess && salt && walletAddress.length > 0 && allRevealed) {
+        } else if (guess && salt && walletAddress.length > 0) {
             revealGuess(gameAddress, walletAddress, guess, salt).then((res) => {
                 if (res.confirmed == true) setHasRevealed(true);
             })
@@ -95,6 +113,14 @@ function RevealPhaseScreen() {
         setWinnerAddress(winner);
     }
 
+    const getWinnings = async () => {
+        claimWinnings(gameAddress, walletAddress);
+    }
+
+    const getServiceFee = async () => {
+        claimServiceFee(gameAddress, walletAddress);
+    }
+
     return (
         <>
             <Link to={`/entergame/${gameAddress}`} state={{ from: gameAddress }} id="backbtn" className="btn">
@@ -112,8 +138,29 @@ function RevealPhaseScreen() {
                     <p className="secondarytext">{revealCount} / {playerCount} revealed</p>
                     {hasRevealed ?
                         <>
-                            <img src={loading} id="loadinggifsmall"></img>
-                            <p>waiting for other players...</p>
+                            {gameIsFinished ?
+                                <>
+                                    <p className="padding20">the game is over</p>
+                                    {isWinner ?
+                                        <>
+                                            <h3 className="padding20">you won!</h3>
+                                            <button className="btn" onClick={getWinnings}>claim your price</button>
+                                        </>
+                                        :
+                                        <p>you lost.</p>
+                                    }
+
+                                </>
+                                :
+                                <>
+                                    <img src={loading} id="loadinggifsmall"></img>
+                                    {allRevealed ?
+                                        <p>waiting for results...</p>
+                                        :
+                                        <p>waiting for other players...</p>
+                                    }
+                                </>
+                            }
                         </>
                         :
                         <>
@@ -139,9 +186,15 @@ function RevealPhaseScreen() {
                 {isMaster ?
                     <div className="textfield bordergold glowy">
                         <h3>you are the game master</h3>
-                        <p><b>Condition</b>: all players have revealed their guess.</p>
-                        <br />
-                        <button className="btn padding20" onClick={startLastPhase}>Start</button>
+                        {gameIsFinished ?
+                            <button className="btn" onClick={getServiceFee}>claim your service fee</button>
+                            :
+                            <>
+                                <p><b>Condition</b>: all players have revealed their guess.</p>
+                                <br />
+                                <button className="btn padding20" onClick={startLastPhase}>Start</button>
+                            </>
+                        }
                         <br />
                     </div>
                     : null

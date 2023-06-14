@@ -127,7 +127,36 @@ export const startGame = async (contractAddress: string, wallet: string) => {
             confirmed: true,
         }
     } catch (err: any) {
-        console.log("Failed, so ist die schreibweise falsch")
+        console.log("Error: ", err.message)
+        return {
+            confirmed: false
+        }
+    }
+}
+
+export const claimServiceFee = async (contractAddress: string, wallet: string) => {
+    if (!window.ethereum || wallet === null || wallet === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
+        };
+    };
+    const contract = createGameContractInstance(contractAddress);
+    const transactionParams = {
+        to: contractAddress,
+        from: wallet,
+        data: contract.methods.retrieveServiceFee().encodeABI(),
+    }
+    try {
+        await window.ethereum.request({
+            method: "eth_sendTransaction",
+            params: [transactionParams],
+        });
+        return {
+            confirmed: true,
+        };
+    } catch (error: any) {
+        console.log("Error: ", error.message);
         return {
             confirmed: false
         }
@@ -279,6 +308,13 @@ export const checkIfGameStarted = async (contractAddress: string) => {
     const contract = createGameContractInstance(contractAddress);
     return await contract.methods.isStarted().call() as boolean;
 }
+
+export const checkForRevealPhase = async (contractAddress: string) => {
+    const contract = createGameContractInstance(contractAddress);
+    return await contract.methods.phase().call() == 1 ? true : false;
+}
+
+// export const checkPhaseOfGame
 
 //WALLET FUNCTIONALITY
 export const connectWallet = async () => {
