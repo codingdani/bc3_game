@@ -1,6 +1,3 @@
-import { transcode } from "buffer";
-import { encode } from "punycode";
-
 //dotenv bug with typescript??
 const infuraKey = "b6b652a41f604aadb527654f04bed96c";
 //const infuraKey = process.env.REACT_APP_INFURA_KEY;
@@ -147,8 +144,13 @@ export const getGameDetails = async (address: string) => {
 
 export const getCurrentPlayerCount = async (address: string) => {
     const contract = createGameContractInstance(address);
-    const currentPlayerCount: number = await contract.methods.getPlayerCount().call();
-    return currentPlayerCount;
+    return await contract.methods.getPlayerCount().call() as number;
+}
+
+export const getRevealedPlayerCount = async (address: string) => {
+    const contract = createGameContractInstance(address);
+    const getRevealedPlayerCount: number = await contract.methods.revealedPlayers().call();
+    return getRevealedPlayerCount;
 }
 
 export const enterGame = async (
@@ -271,7 +273,7 @@ export const checkIfGameMaster = async (address: string, contractAddress: string
 
 export const checkIfGameStarted = async (contractAddress: string) => {
     const contract = createGameContractInstance(contractAddress);
-    return await contract.methods.isStarted().call();
+    return await contract.methods.isStarted().call() as Boolean;
 }
 
 //WALLET FUNCTIONALITY

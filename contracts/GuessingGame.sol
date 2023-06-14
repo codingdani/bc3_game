@@ -47,7 +47,6 @@ contract GuessingGame {
     uint256 winningAmount;
 
     bool isInit = false;
-    //genug um einen Getter zu haben und Variable im Frontend auslesen zu können?
     bool public isStarted = false;
 
     function init(
@@ -80,15 +79,19 @@ contract GuessingGame {
         _;
     }
 
-    function getPlayers() public view returns (address[] memory) {
+    function getPlayers() external view returns (address[] memory) {
         return players;
     }
 
-    function getPlayerCount() public view returns (uint256) {
+    function getPlayerCount() external view returns (uint256) {
         return players.length;
     }
 
-    function commitHash(bytes32 _hash) public payable gameExpired {
+    function getIfPlayerRevealed() external view returns (bool) {
+        return commits[msg.sender].revealed;
+    }
+
+    function commitHash(bytes32 _hash) external payable gameExpired {
         require(phase == Phase.Commit, "The commit phase is over.");
         require(msg.value == RULES.entryFee, "Insufficient entry fee.");
         require(
@@ -100,7 +103,7 @@ contract GuessingGame {
         emit CommitMade(msg.sender, _hash);
     }
 
-    function reveal(uint256 guess, uint256 salt) public gameExpired {
+    function reveal(uint256 guess, uint256 salt) external gameExpired {
         bytes32 commit = keccak256(abi.encodePacked(guess, salt));
         require(phase == Phase.Reveal, "It's not the time to reveal yet.");
         require(block.timestamp < revealDeadline, "Reveal deadline is over.");
@@ -115,7 +118,7 @@ contract GuessingGame {
         emit RevealMade(msg.sender, guess);
     }
 
-    function withdraw() public {
+    function withdraw() external {
         uint256 time = block.timestamp;
         require(time > expired && !isStarted, "You cannot withdraw.");
         require(commits[msg.sender].commit != 0, "You didn't participate.");
@@ -124,7 +127,7 @@ contract GuessingGame {
         payable(msg.sender).transfer(RULES.entryFee);
     }
 
-    function startRevealPhase() public onlyOwner gameExpired {
+    function startRevealPhase() external onlyOwner gameExpired {
         require(phase == Phase.Commit, "Already started reveal phase.");
         require(players.length >= RULES.minPlayers, "Not enough players.");
         phase = Phase.Reveal;
@@ -132,7 +135,7 @@ contract GuessingGame {
         emit RevealStart(owner, revealDeadline);
     }
 
-    function finishGame() public onlyOwner gameExpired {
+    function finishGame() external onlyOwner gameExpired {
         uint256 time = block.timestamp;
         require(
             time > revealDeadline || revealedPlayers == players.length,
@@ -156,18 +159,17 @@ contract GuessingGame {
         emit WinnerDeclared(winner, winningAmount);
     }
 
-    function payout() public {
+    function payout() external {
         require(winner == msg.sender, "You are not the winner.");
         require(!winnerHasWithdrawn, "You already withdrawed your win.");
         winnerHasWithdrawn = true;
         payable(winner).transfer(winningAmount);
     }
 
-    function retrieveWinningFee() public onlyOwner {
+    function retrieveWinningFee() external onlyOwner {
         require(winnerHasWithdrawn, "The winner hasn't payout their win.");
         require(address(this).balance > 0, "You already collected your fee.");
         payable(msg.sender).transfer(address(this).balance);
-        //deactivate Game??
     }
 
     function calcWinningDiff(uint256 minDiff, uint256 target)

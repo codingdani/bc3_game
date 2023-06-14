@@ -33,6 +33,7 @@ function EnterGame() {
     const [hasCommitted, setHasCommitted] = useState<boolean>(false);
     const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
     const [isRevealPhase, setIsRevealPhase] = useState<boolean>(true);
+    //if revealphase is true, no one can enter anymore. no rendering of input and submit button
 
     useEffect(() => {
         async function fetchWallet() {
@@ -191,7 +192,7 @@ function EnterGame() {
                                             <>
                                                 <br />
                                                 <p>the reveal phase has started.</p>
-                                                <button className="btn" onClick={() => navigate(`/revealphase/${gameAddress}`, { state: { gameDetails, gameAddress, walletAddress, isMaster } })}>enter reveal phase</button>
+                                                <button className="btn" onClick={() => navigate(`/revealphase/${gameAddress}`, { state: { gameDetails, gameAddress, playerCount, walletAddress, isMaster } })}>enter reveal phase</button>
                                                 <br />
                                             </>
                                             :

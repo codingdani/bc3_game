@@ -102,13 +102,13 @@ input {
 .textfield>.btn {
   all: unset;
   border-radius: 3px;
-  color: rgb(25, 25, 25);
+  color: rgb(220, 220, 220);
   font-family: inherit;
   font-size: 1.3rem;
   padding: 8px 25px;
-  background-color: rgb(234, 234, 234);
+  background-color: rgb(41, 41, 41);
   cursor: pointer;
-  border: none;
+  border: 1px solid white;
 }
 
 .btn:hover,
