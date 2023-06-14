@@ -29,7 +29,7 @@ function EnterGame() {
     const [gameDetails, setGameDetails] = useState<TGameDetails>();
     const [guess, setGuess] = useState<number>(0);
     const [salt, setSalt] = useState<number>(0);
-    const [playerCount, setPlayerCount] = useState<number>();
+    const [playerCount, setPlayerCount] = useState<number>(0);
     const [isMaster, setIsMaster] = useState<boolean>(false);
     const [hasCommitted, setHasCommitted] = useState<boolean>(false);
     const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
@@ -136,6 +136,10 @@ function EnterGame() {
         };
     }
 
+    const enterRevealPhase = () => {
+        if (playerCount >= Number(gameDetails?.minPlayers)) startRevealPhase(gameAddress, walletAddress);
+    }
+
     return (
         <>
             <Link to="/opengames" id="backbtn" className="btn">
@@ -185,7 +189,7 @@ function EnterGame() {
                                             :
                                             <>
                                                 <p><b>Condition</b>: min. player count reached.</p>
-                                                <button className="btn padding20" onClick={() => startRevealPhase(gameAddress, walletAddress)}>start reveal phase</button>
+                                                <button className="btn padding20" onClick={enterRevealPhase}>start reveal phase</button>
                                                 <p>Once the condition is met, the game will start automatically in 24 hours or you can start it manually.</p>
                                             </>
 
