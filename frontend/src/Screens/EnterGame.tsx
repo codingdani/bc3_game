@@ -32,7 +32,7 @@ function EnterGame() {
     const [isMaster, setIsMaster] = useState<boolean>(false);
     const [hasCommitted, setHasCommitted] = useState<boolean>(false);
     const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
-    const [isRevealPhase, setIsRevealPhase] = useState<boolean>(true);
+    const [isRevealPhase, setIsRevealPhase] = useState<boolean>(false);
     //if revealphase is true, no one can enter anymore. no rendering of input and submit button
 
     useEffect(() => {

@@ -164,6 +164,19 @@
     },
     {
         "inputs": [],
+        "name": "getIfPlayerRevealed",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "getPlayerCount",
         "outputs": [
             {
@@ -288,7 +301,7 @@
     },
     {
         "inputs": [],
-        "name": "retrieveWinningFee",
+        "name": "retrieveServiceFee",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -352,6 +365,19 @@
                 "internalType": "address",
                 "name": "",
                 "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "winnerHasWithdrawn",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
             }
         ],
         "stateMutability": "view",

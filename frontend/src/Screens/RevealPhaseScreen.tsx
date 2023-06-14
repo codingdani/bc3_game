@@ -10,17 +10,13 @@ function RevealPhaseScreen() {
 
     const [guess, setGuess] = useState<number>(0);
     const [salt, setSalt] = useState<number>(0);
-    const [hasRevealed, setHasRevealed] = useState<boolean>(false);
+    const [hasRevealed, setHasRevealed] = useState<boolean>(true);
     const [newReveal, setNewReveal] = useState<boolean>(false);
     const [revealCount, setRevealCount] = useState<number>(0);
     const [allRevealed, setAllRevealed] = useState<boolean>(false);
     const [gameIsFinished, setGameIsFinished] = useState<boolean>(true);
     const [winnerAddress, setWinnerAddress] = useState<string>("");
     const [isWinner, setIsWinner] = useState<boolean>(true);
-
-    //use revealedPlayers public unit256 to display how many have revealed their guess.
-
-    // like "x / players.length have revealed"
 
     useEffect(() => {
         scRevealMadeEventListener(gameAddress);
@@ -90,8 +86,7 @@ function RevealPhaseScreen() {
     }
 
     const startLastPhase = () => {
-        //if alle revealed haben 
-        startGame(gameAddress, walletAddress);
+        if (allRevealed) startGame(gameAddress, walletAddress);
     }
 
     const fetchWinnerAddress = async (address: string) => {
@@ -116,15 +111,12 @@ function RevealPhaseScreen() {
                     <h3>reveal phase</h3>
                     <p className="secondarytext">{revealCount} / {playerCount} revealed</p>
                     {hasRevealed ?
-
                         <>
                             <img src={loading} id="loadinggifsmall"></img>
-                            <p>waiting for the reaveal phase...</p>
+                            <p>waiting for other players...</p>
                         </>
-
                         :
                         <>
-
                             <p>make sure to enter the exact same guess and salt as you committed in the first step. Otherwise you get disqualified without payback.</p>
                             <section className="flex evenly">
                                 <div className="padding20">

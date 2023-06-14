@@ -3,7 +3,7 @@ const infuraKey = "b6b652a41f604aadb527654f04bed96c";
 //const infuraKey = process.env.REACT_APP_INFURA_KEY;
 const gameContractABI = require('../guessing_game_abi.json');
 const factoryContractABI = require('../factory_abi.json');
-const factoryAdress = "0xfc1D662189778B55fd2dA9144A5718B76108e613";
+const factoryAdress = "0x10B9221A76200e66ff29e05803Dd6428D99cd182";
 
 const Web3 = require('web3');
 const web3 = new Web3(
@@ -149,8 +149,7 @@ export const getCurrentPlayerCount = async (address: string) => {
 
 export const getRevealedPlayerCount = async (address: string) => {
     const contract = createGameContractInstance(address);
-    const getRevealedPlayerCount: number = await contract.methods.revealedPlayers().call();
-    return getRevealedPlayerCount;
+    return await contract.methods.revealedPlayers().call() as number;
 }
 
 export const enterGame = async (
@@ -262,7 +261,12 @@ export const checkForParticipation = async (address: string, contractAddress: st
     playersArray.map((string) => {
         lowerCaseArray.push(string.trim().toLowerCase());
     });
-    return lowerCaseArray.includes(address.trim().toLowerCase());
+    return lowerCaseArray.includes(address.trim().toLowerCase()) as boolean;
+}
+
+export const checkIfPlayerHasRevealed = async (address: string, contractAddress: string) => {
+    const contract = createGameContractInstance(contractAddress);
+    return contract.methods.getIfPlayerRevealed().call({ from: address }) as boolean;
 }
 
 export const checkIfGameMaster = async (address: string, contractAddress: string) => {
@@ -273,7 +277,7 @@ export const checkIfGameMaster = async (address: string, contractAddress: string
 
 export const checkIfGameStarted = async (contractAddress: string) => {
     const contract = createGameContractInstance(contractAddress);
-    return await contract.methods.isStarted().call() as Boolean;
+    return await contract.methods.isStarted().call() as boolean;
 }
 
 //WALLET FUNCTIONALITY
