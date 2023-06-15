@@ -5,7 +5,14 @@ contract GuessingGame {
     event CommitMade(address indexed _from, bytes32 _hash);
     event RevealStart(address indexed _from, uint256 _deadline);
     event RevealMade(address indexed _from, uint256 _guess);
-    event WinnerDeclared(address indexed _winner, uint256 _amount);
+    event WinnerDeclared(
+        address indexed _winner,
+        uint256 _amountWinning,
+        uint256 _amountFee
+    );
+    event WinnerWithdrawed(address indexed _winner);
+    event OwnerWithdrawed(address indexed _owner);
+
     uint256 public constant DAY = 86400; //seconds
     uint256 public constant WEEK = DAY * 7; //seconds
 
@@ -41,14 +48,13 @@ contract GuessingGame {
     uint256 public revealedPlayers;
 
     address public owner;
-
     address public winner;
     bool public winnerHasWithdrawn;
     bool public ownerHasWithdrawn;
-    uint256 winningAmount;
-    uint256 serviceFeeAmount;
+    uint256 public winningAmount;
+    uint256 public serviceFeeAmount;
 
-    bool isInit = false;
+    bool private isInit = false;
     bool public isStarted = false;
 
     function init(
@@ -91,6 +97,19 @@ contract GuessingGame {
 
     function getIfPlayerRevealed() external view returns (bool) {
         return commits[msg.sender].revealed;
+    }
+
+    function getGuessesAfterFinish() external view returns (uint256[] memory) {
+        require(isStarted, "You cannot see the guesses yet");
+        uint256[] memory guesses = new uint256[](players.length);
+        for (uint256 i = 0; i < players.length; i++) {
+            if (commits[players[i]].revealed) {
+                guesses[i] = commits[players[i]].guess;
+            } else {
+                guesses[i] = RULES.maxGuess + 1;
+            }
+        }
+        return guesses;
     }
 
     function commitHash(bytes32 _hash) external payable gameExpired {
@@ -159,7 +178,7 @@ contract GuessingGame {
         winner = possibleWinners[winnerIndex];
         winningAmount = (address(this).balance * 95) / 100;
         serviceFeeAmount = (address(this).balance * 5) / 100;
-        emit WinnerDeclared(winner, winningAmount);
+        emit WinnerDeclared(winner, winningAmount, serviceFeeAmount);
     }
 
     function payout() external {
@@ -167,19 +186,20 @@ contract GuessingGame {
         require(!winnerHasWithdrawn, "You already withdrawed your win.");
         winnerHasWithdrawn = true;
         payable(winner).transfer(winningAmount);
+        emit WinnerWithdrawed(winner);
     }
 
     function retrieveServiceFee() external onlyOwner {
         require(!ownerHasWithdrawn, "You retrieved your fees already.");
         ownerHasWithdrawn = true;
         payable(owner).transfer(serviceFeeAmount);
+        emit OwnerWithdrawed(owner);
     }
 
-    function calcWinningDiff(uint256 minDiff, uint256 target)
-        private
-        view
-        returns (uint256)
-    {
+    function calcWinningDiff(
+        uint256 minDiff,
+        uint256 target
+    ) private view returns (uint256) {
         for (uint256 i = 0; i < players.length; i++) {
             if (
                 commits[players[i]].revealed == true &&
@@ -191,11 +211,10 @@ contract GuessingGame {
         return minDiff;
     }
 
-    function absDiff(uint256 num1, uint256 num2)
-        private
-        pure
-        returns (uint256)
-    {
+    function absDiff(
+        uint256 num1,
+        uint256 num2
+    ) private pure returns (uint256) {
         if (num1 >= num2) {
             return num1 - num2;
         } else {
