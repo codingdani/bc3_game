@@ -314,8 +314,6 @@ export const checkForRevealPhase = async (contractAddress: string) => {
     return await contract.methods.phase().call() == 1 ? true : false;
 }
 
-// export const checkPhaseOfGame
-
 //WALLET FUNCTIONALITY
 export const connectWallet = async () => {
     if (window.ethereum) {
