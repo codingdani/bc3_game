@@ -5,13 +5,9 @@ contract GuessingGame {
     event CommitMade(address indexed _from, bytes32 _hash);
     event RevealStart(address indexed _from, uint256 _deadline);
     event RevealMade(address indexed _from, uint256 _guess);
-    event WinnerDeclared(
-        address indexed _winner,
-        uint256 _amountWinning,
-        uint256 _amountFee
-    );
-    event WinnerWithdrawed(address indexed _winner);
-    event OwnerWithdrawed(address indexed _owner);
+    event WinnerDeclared(address indexed _winner);
+    event WinnerWithdrawn();
+    event OwnerWithdrawn();
 
     uint256 public constant DAY = 86400; //seconds
     uint256 public constant WEEK = DAY * 7; //seconds
@@ -33,6 +29,19 @@ contract GuessingGame {
         bool revealed;
         uint256 guess;
     }
+
+    struct Player {
+        address _address;
+        uint256 guess;
+    }
+
+    struct Result {
+        uint256 target;
+        uint256 winningAmount;
+        uint256 serviceFeeAmount;
+    }
+
+    Result public result;
     Phase public phase;
     Rules public RULES;
 
@@ -49,10 +58,8 @@ contract GuessingGame {
 
     address public owner;
     address public winner;
-    bool public winnerHasWithdrawn;
-    bool public ownerHasWithdrawn;
-    uint256 public winningAmount;
-    uint256 public serviceFeeAmount;
+    bool private winnerHasWithdrawn;
+    bool private ownerHasWithdrawn;
 
     bool private isInit = false;
     bool public isStarted = false;
@@ -99,15 +106,18 @@ contract GuessingGame {
         return commits[msg.sender].revealed;
     }
 
-    function getGuessesAfterFinish() external view returns (uint256[] memory) {
-        require(isStarted, "You cannot see the guesses yet");
-        uint256[] memory guesses = new uint256[](players.length);
+    function getGuessesAfterFinish() external view returns (Player[] memory) {
+        require(isStarted, "You cannot see the guesses yet!");
+        Player[] memory guesses = new Player[](players.length);
         for (uint256 i = 0; i < players.length; i++) {
+            Player memory player;
+            player._address = players[i];
             if (commits[players[i]].revealed) {
-                guesses[i] = commits[players[i]].guess;
+                player.guess = commits[players[i]].guess;
             } else {
-                guesses[i] = RULES.maxGuess + 1;
+                player.guess = RULES.maxGuess + 1;
             }
+            guesses[i] = player;
         }
         return guesses;
     }
@@ -176,24 +186,24 @@ contract GuessingGame {
         uint256 randomNumber = random();
         uint256 winnerIndex = randomNumber % (possibleWinners.length);
         winner = possibleWinners[winnerIndex];
-        winningAmount = (address(this).balance * 95) / 100;
-        serviceFeeAmount = (address(this).balance * 5) / 100;
-        emit WinnerDeclared(winner, winningAmount, serviceFeeAmount);
+        result.winningAmount = (address(this).balance * 95) / 100;
+        result.serviceFeeAmount = (address(this).balance * 5) / 100;
+        emit WinnerDeclared(winner);
     }
 
     function payout() external {
         require(winner == msg.sender, "You are not the winner.");
         require(!winnerHasWithdrawn, "You already withdrawed your win.");
         winnerHasWithdrawn = true;
-        payable(winner).transfer(winningAmount);
-        emit WinnerWithdrawed(winner);
+        payable(winner).transfer(result.winningAmount);
+        emit WinnerWithdrawn();
     }
 
     function retrieveServiceFee() external onlyOwner {
         require(!ownerHasWithdrawn, "You retrieved your fees already.");
         ownerHasWithdrawn = true;
-        payable(owner).transfer(serviceFeeAmount);
-        emit OwnerWithdrawed(owner);
+        payable(owner).transfer(result.serviceFeeAmount);
+        emit OwnerWithdrawn();
     }
 
     function calcWinningDiff(
