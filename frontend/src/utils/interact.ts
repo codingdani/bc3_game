@@ -131,7 +131,7 @@ export const deactivateGame = async (walletAddress: string, contractAddress: str
     };
     const transactionParams = {
         from: walletAddress,
-        to: factoryContract,
+        to: factoryAddress,
         data: factoryContract.methods.deactivateGame(walletAddress, contractAddress).encodeABI(),
     }
     return tryEthSendTransaction(transactionParams);

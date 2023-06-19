@@ -152,21 +152,6 @@ function CommitPhaseScreen() {
             <Link to="/opengames" id="backbtn" className="btn">
                 back
             </Link>
-            {hasCommitted ?
-                <div id="getmymoneyback" className="marginbtm">
-                    <span onClick={showWithdraw} className="padding5 borderred round">my money is stuck?</span>
-                    {showWithdrawButton ?
-                        <div className="padding5">
-                            <p>if the game master does not respond for 7 Days, you can withdraw your money</p>
-                            <br />
-                            <button className="btn" onClick={() => withdrawMyEntryFee(gameAddress, walletAddress)}>withdraw my money</button>
-                        </div>
-                        :
-                        null
-                    }
-                </div>
-                : null
-            }
             {newPlayerEntered ? <p className="padding20">a player has entered the game</p> : null}
             {gameDetails ?
                 <>
@@ -181,6 +166,22 @@ function CommitPhaseScreen() {
                                 }
                                 </p>
                                 <p>current players: <span className="importantnr">{playerCount}</span>  min. players: <span className="importantnr">{gameDetails.minPlayers}</span></p>
+                                {hasCommitted ?
+                                    <div id="getmymoneyback" className="marginbtm">
+                                        <span onClick={showWithdraw} className="padding5 borderred round">my money is stuck?</span>
+                                        {showWithdrawButton ?
+                                            <div className="padding5">
+                                                <p>if the game master does not respond for 7 Days, you can withdraw your money</p>
+                                                <br />
+                                                <button className="btn" onClick={() => withdrawMyEntryFee(gameAddress, walletAddress)}>withdraw my money</button>
+                                            </div>
+                                            :
+                                            null
+                                        }
+                                    </div>
+                                    : null
+                                }
+
                             </div>
                             <div className="textfield borderwhite">
                                 <h3 className="secondarytext">RULES</h3>
