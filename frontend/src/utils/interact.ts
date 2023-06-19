@@ -1,19 +1,19 @@
-//dotenv bug with typescript??
-const infuraKey = "b6b652a41f604aadb527654f04bed96c";
-//const infuraKey = process.env.REACT_APP_INFURA_KEY;
+//PROVIDER AND CONTRACTs
+const infuraKey = process.env.REACT_APP_INFURA_KEY;
 const gameContractABI = require('../guessing_game_abi.json');
 const factoryContractABI = require('../factory_abi.json');
-const factoryAdress = "0x10B9221A76200e66ff29e05803Dd6428D99cd182";
+const factoryAddress = process.env.REACT_APP_FACTORY_CONTRACT as string;
 
 const Web3 = require('web3');
 const web3 = new Web3(
     new Web3.providers.WebsocketProvider(`wss://sepolia.infura.io/ws/v3/${infuraKey}`)
 );
+//////////////////////////////////////////////////////////////////////////////////////////////
 
-//CONTRACT INSTANCES
+//CONTRACT INSTANCES && DRY FUNCTIONs
 const factoryContract = new web3.eth.Contract(
     factoryContractABI,
-    factoryAdress,
+    factoryAddress,
 );
 export const createGameContractInstance = (address: string) => {
     return new web3.eth.Contract(
@@ -21,48 +21,17 @@ export const createGameContractInstance = (address: string) => {
         address,
     );
 }
-
-//FETCH OPEN GAMES
-const getAllGameMasters = async () => {
-    return await factoryContract.methods.getMasters().call();
+interface T_TransactionParams {
+    to: string,
+    from: string,
+    data: any,
+    value?: any,
 }
-export const getAllCurrentGames = async () => {
-    const allGameMasters: string[] = await getAllGameMasters();
-    const gameArray = [];
-    for (let i = 0; i < allGameMasters.length; i++) {
-        const allGames = await factoryContract.methods.getAllActiveGames(allGameMasters[i]).call();
-        gameArray.push(...allGames);
-    };
-    return gameArray;
-}
-
-//GAME INTERACTION
-export const createGame = async (
-    address: string,
-    minGuess: number,
-    maxGuess: number,
-    playerCount: number,
-    fee: number) => {
-    if (!window.ethereum || address === null || address === undefined) {
-        return {
-            confirmed: false,
-            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
-        };
-    };
-    const transactionParams = {
-        to: factoryAdress,
-        from: address,
-        data: factoryContract.methods.createGame(
-            minGuess,
-            maxGuess,
-            playerCount,
-            web3.utils.toWei(fee.toString(), "ether")
-        ).encodeABI(),
-    };
+const tryEthSendTransaction = async (transactionParams: T_TransactionParams) => {
     try {
         const txHash = await window.ethereum.request({
             method: "eth_sendTransaction",
-            params: [transactionParams],
+            params: [transactionParams]
         });
         return {
             confirmed: true,
@@ -75,12 +44,41 @@ export const createGame = async (
         };
     };
 }
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//GAME INTERACTION
+
+//GAME MASTER FUNCTIONs
+export const createGame = async (
+    address: string,
+    minGuess: number,
+    maxGuess: number,
+    playerCount: number,
+    fee: number) => {
+    if (!window.ethereum || address === null || address === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet."
+        };
+    };
+    const transactionParams = {
+        to: factoryAddress,
+        from: address,
+        data: factoryContract.methods.createGame(
+            minGuess,
+            maxGuess,
+            playerCount,
+            web3.utils.toWei(fee.toString(), "ether")
+        ).encodeABI(),
+    };
+    return tryEthSendTransaction(transactionParams);
+}
 
 export const startRevealPhase = async (contractAddress: string, wallet: string) => {
     if (!window.ethereum || wallet === null || wallet === undefined) {
         return {
             confirmed: false,
-            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
+            status: "💡 Connect your Metamask wallet."
         };
     };
     const contract = createGameContractInstance(contractAddress);
@@ -89,27 +87,14 @@ export const startRevealPhase = async (contractAddress: string, wallet: string) 
         from: wallet,
         data: contract.methods.startRevealPhase().encodeABI(),
     }
-    try {
-        await window.ethereum.request({
-            method: "eth_sendTransaction",
-            params: [transactionParams],
-        });
-        return {
-            confirmed: true,
-        }
-    } catch (err: any) {
-        console.log("Failed, so ist die schreibweise falsch")
-        return {
-            confirmed: false
-        }
-    }
+    return tryEthSendTransaction(transactionParams);
 }
 
 export const startGame = async (contractAddress: string, wallet: string) => {
     if (!window.ethereum || wallet === null || wallet === undefined) {
         return {
             confirmed: false,
-            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
+            status: "💡 Connect your Metamask wallet."
         };
     };
     const contract = createGameContractInstance(contractAddress);
@@ -118,27 +103,14 @@ export const startGame = async (contractAddress: string, wallet: string) => {
         from: wallet,
         data: contract.methods.finishGame().encodeABI(),
     }
-    try {
-        await window.ethereum.request({
-            method: "eth_sendTransaction",
-            params: [transactionParams],
-        });
-        return {
-            confirmed: true,
-        }
-    } catch (err: any) {
-        console.log("Error: ", err.message)
-        return {
-            confirmed: false
-        }
-    }
+    return tryEthSendTransaction(transactionParams);
 }
 
 export const claimServiceFee = async (contractAddress: string, wallet: string) => {
     if (!window.ethereum || wallet === null || wallet === undefined) {
         return {
             confirmed: false,
-            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
+            status: "💡 Connect your Metamask wallet."
         };
     };
     const contract = createGameContractInstance(contractAddress);
@@ -147,22 +119,120 @@ export const claimServiceFee = async (contractAddress: string, wallet: string) =
         from: wallet,
         data: contract.methods.retrieveServiceFee().encodeABI(),
     }
-    try {
-        await window.ethereum.request({
-            method: "eth_sendTransaction",
-            params: [transactionParams],
-        });
-        return {
-            confirmed: true,
-        };
-    } catch (error: any) {
-        console.log("Error: ", error.message);
-        return {
-            confirmed: false
-        }
-    }
+    return tryEthSendTransaction(transactionParams);
 }
 
+export const deactivateGame = async (walletAddress: string, contractAddress: string) => {
+    if (!window.ethereum || walletAddress === null || walletAddress === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet."
+        };
+    };
+    const transactionParams = {
+        from: walletAddress,
+        to: factoryContract,
+        data: factoryContract.methods.deactivateGame(walletAddress, contractAddress).encodeABI(),
+    }
+    return tryEthSendTransaction(transactionParams);
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//PLAYER FUNCTIONs
+export const enterGame = async (
+    contractAddress: string,
+    wallet: string,
+    guess: number,
+    salt: number) => {
+    if (!window.ethereum || wallet === null || wallet === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet."
+        };
+    };
+    const _commitHash = web3.utils.soliditySha3(guess, salt);
+    const contract = createGameContractInstance(contractAddress);
+    const gameRules = await contract.methods.RULES().call();
+    const transactionParams = {
+        to: contractAddress,
+        from: wallet,
+        data: contract.methods.commitHash(_commitHash).encodeABI(),
+        value: web3.utils.toHex(gameRules.entryFee.toString()),
+    };
+    return tryEthSendTransaction(transactionParams);
+}
+
+export const revealGuess = async (
+    contractAddress: string,
+    wallet: string,
+    guess: number,
+    salt: number) => {
+    if (!window.ethereum || wallet === null || wallet === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet."
+        };
+    };
+    const contract = createGameContractInstance(contractAddress);
+    const transactionParams = {
+        to: contractAddress,
+        from: wallet,
+        data: contract.methods.reveal(guess, salt).encodeABI(),
+    }
+    return tryEthSendTransaction(transactionParams);
+}
+
+export const claimWinnings = async (contractAddress: string, wallet: string) => {
+    if (!window.ethereum || wallet === null || wallet === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet."
+        };
+    };
+    const contract = createGameContractInstance(contractAddress);
+    const transactionParams = {
+        to: contractAddress,
+        from: wallet,
+        data: contract.methods.payout().encodeABI(),
+    }
+    return tryEthSendTransaction(transactionParams);
+}
+
+export const withdrawMyEntryFee = async (contractAddress: string, wallet: string) => {
+    if (!window.ethereum || wallet === null || wallet === undefined) {
+        return {
+            confirmed: false,
+            status: "💡 Connect your Metamask wallet."
+        };
+    };
+    const contract = createGameContractInstance(contractAddress);
+    const transactionParams = {
+        to: contractAddress,
+        from: wallet,
+        data: contract.methods.withdraw().encodeABI(),
+    }
+    return tryEthSendTransaction(transactionParams);
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//GET DATA FROM PUBLIC VARIABLES OF FACTORY CONTRACT
+const getAllGameMasters = async () => {
+    return await factoryContract.methods.getMasters().call();
+}
+export const getAllCurrentGames = async () => {
+    const allGameMasters: string[] = await getAllGameMasters();
+    console.log(allGameMasters);
+    const gameArray = [];
+    for (let i = 0; i < allGameMasters.length; i++) {
+        console.log("getting all games");
+        const allGames = await factoryContract.methods.getAllActiveGames(allGameMasters[i]).call();
+        gameArray.push(...allGames);
+    };
+    return gameArray;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//GET NUMBERS FROM PUBLIC VARIABLES OF GAME CONTRACT
 export const getGameDetails = async (address: string) => {
     const contract = createGameContractInstance(address);
     const contractRules = await contract.methods.RULES().call();
@@ -180,109 +250,9 @@ export const getRevealedPlayerCount = async (address: string) => {
     const contract = createGameContractInstance(address);
     return await contract.methods.revealedPlayers().call() as number;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////
 
-export const enterGame = async (
-    contractAddress: string,
-    wallet: string,
-    guess: number,
-    salt: number) => {
-    if (!window.ethereum || wallet === null || wallet === undefined) {
-        return {
-            confirmed: false,
-            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
-        };
-    };
-    const _commitHash = web3.utils.soliditySha3(guess, salt);
-    const contract = createGameContractInstance(contractAddress);
-    const gameRules = await contract.methods.RULES().call();
-    const transactionParams = {
-        to: contractAddress,
-        from: wallet,
-        data: contract.methods.commitHash(_commitHash).encodeABI(),
-        value: web3.utils.toHex(gameRules.entryFee.toString()),
-    };
-    try {
-        const txHash = await window.ethereum.request({
-            method: "eth_sendTransaction",
-            params: [transactionParams]
-        });
-        return {
-            confirmed: true,
-            status: `transaction sent. View it under https://sepolia.etherscan.io/tx/${txHash}`
-        };
-    } catch (error: any) {
-        return {
-            confirmed: false,
-            status: "There was an Error: " + error.message
-        };
-    };
-}
-
-export const revealGuess = async (
-    contractAddress: string,
-    wallet: string,
-    guess: number,
-    salt: number) => {
-    if (!window.ethereum || wallet === null || wallet === undefined) {
-        return {
-            confirmed: false,
-            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
-        };
-    };
-    const contract = createGameContractInstance(contractAddress);
-    const transactionParams = {
-        to: contractAddress,
-        from: wallet,
-        data: contract.methods.reveal(guess, salt).encodeABI(),
-    }
-    try {
-        const txHash = await window.ethereum.request({
-            method: "eth_sendTransaction",
-            params: [transactionParams],
-        });
-        return {
-            confirmed: true,
-            status: `transaction sent. View it under https://sepolia.etherscan.io/tx/${txHash}`
-        };
-    } catch (error: any) {
-        return {
-            confirmed: false,
-            status: "There was an Error: " + error.message
-        };
-    };
-}
-
-export const claimWinnings = async (contractAddress: string, wallet: string) => {
-    if (!window.ethereum || wallet === null || wallet === undefined) {
-        return {
-            confirmed: false,
-            status: "💡 Connect your Metamask wallet to update the message on the blockchain."
-        };
-    };
-    const contract = createGameContractInstance(contractAddress);
-    const transactionsParams = {
-        to: contractAddress,
-        from: wallet,
-        data: contract.methods.payout().encodeABI(),
-    }
-    try {
-        const txHash = await window.ethereum.request({
-            method: "eth_sendTransaction",
-            params: [transactionsParams],
-        });
-        return {
-            confirmed: true,
-            status: `transaction sent. View it under https://sepolia.etherscan.io/tx/${txHash}`
-        }
-    } catch (err: any) {
-        console.log("Error: ", err.message)
-        return {
-            confirmed: false,
-        }
-    }
-}
-
-//INFO FOR STATE TO RENDER PAGES ACCORDINGLY
+//GET BOOLEAN TO RENDER PAGES ACCORDINGLY
 export const checkForParticipation = async (address: string, contractAddress: string) => {
     const contract = createGameContractInstance(contractAddress);
     const playersArray: string[] = await contract.methods.getPlayers().call();
@@ -293,15 +263,15 @@ export const checkForParticipation = async (address: string, contractAddress: st
     return lowerCaseArray.includes(address.trim().toLowerCase()) as boolean;
 }
 
-export const checkIfPlayerHasRevealed = async (address: string, contractAddress: string) => {
-    const contract = createGameContractInstance(contractAddress);
-    return contract.methods.getIfPlayerRevealed().call({ from: address }) as boolean;
-}
-
 export const checkIfGameMaster = async (address: string, contractAddress: string) => {
     const contract = createGameContractInstance(contractAddress);
     const contractOwner: string = await contract.methods.owner().call();
     return contractOwner.trim().toLowerCase() === address.trim().toLowerCase() ? true : false;
+}
+
+export const checkIfPlayerHasRevealed = async (address: string, contractAddress: string) => {
+    const contract = createGameContractInstance(contractAddress);
+    return contract.methods.getIfPlayerRevealed().call({ from: address }) as boolean;
 }
 
 export const checkIfGameStarted = async (contractAddress: string) => {
@@ -313,6 +283,22 @@ export const checkForRevealPhase = async (contractAddress: string) => {
     const contract = createGameContractInstance(contractAddress);
     return await contract.methods.phase().call() == 1 ? true : false;
 }
+
+export const checkIfWinnerHasWithdrawn = async (contractAddress: string) => {
+    const contract = createGameContractInstance(contractAddress);
+    return await contract.methods.winnerHasWithdrawn().call() as boolean;
+}
+
+export const checkIfOwnerHasWithdrawn = async (contractAddress: string) => {
+    const contract = createGameContractInstance(contractAddress);
+    return await contract.methods.ownerHasWithdrawn().call() as boolean;
+}
+
+export const checkIfGameIsExpired = async (contractAddress: string) => {
+    const contract = createGameContractInstance(contractAddress);
+    return await contract.methods.expired().call() as boolean;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 //WALLET FUNCTIONALITY
 export const connectWallet = async () => {

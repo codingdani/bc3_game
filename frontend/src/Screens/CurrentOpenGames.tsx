@@ -43,6 +43,7 @@ function CurrentOpenGames() {
     useEffect(() => {
         const getGameList = async () => {
             setLoading(true);
+            console.log("her stoppts")
             const currentGames = await getAllCurrentGames();
             setOpenGamesList(currentGames);
         };
@@ -66,7 +67,7 @@ function CurrentOpenGames() {
             <div id="container_for_all_games">
                 {openGamesDetails && openGamesDetails.length > 0 ? (
                     openGamesDetails.map((game) => (
-                        <Link to={`/entergame/${game.address}`} className="gamecontainer" key={game.address} state={{ from: game.address }}>
+                        <Link to={`/commitphase/${game.address}`} className="gamecontainer" key={game.address} state={{ from: game.address }}>
                             <p>{String(game.address).substring(0, 6) + "..." + String(game.address).substring(38)}</p>
                             <p>entry Fee: <span className="importantnr">{game.entryFee}</span></p>
                             <p>intersection between <span className="importantnr">{game.minGuess}</span> - <span className="importantnr">{game.maxGuess}</span></p>

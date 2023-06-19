@@ -101,12 +101,12 @@ input {
 .btn,
 .textfield>.btn {
   all: unset;
-  border-radius: 3px;
+  border-radius: 5px;
   color: rgb(220, 220, 220);
   font-family: inherit;
   font-size: 1.3rem;
   padding: 8px 25px;
-  background-color: rgb(41, 41, 41);
+  background-color: rgb(74, 74, 74);
   cursor: pointer;
   border: 1px solid white;
 }
@@ -186,11 +186,11 @@ input {
   margin: 2% 3%;
   padding: 1% 1% 1% 1%;
   background-color: black;
-  border: 1px solid rgb(181, 167, 2);
+  border: 1px solid white;
   transition: 0.4s;
   height: 150px;
   width: 400px;
-  box-shadow: 0px 0px 10px 1px rgba(236, 213, 9, 0.512);
+  box-shadow: 0px 0px 10px 1px rgba(239, 239, 239, 0.512);
 }
 
 .gamecontainer:hover {
@@ -198,8 +198,6 @@ input {
   cursor: pointer;
   color: black;
   background-color: rgba(217, 217, 217, 0.967);
-  border: 2px solid rgb(181, 167, 2);
-
 }
 
 .gamecontainer>* {
@@ -316,7 +314,11 @@ input {
 }
 
 .borderred {
-  border: 2px solid rgb(74, 181, 2);
+  border: 2px solid rgb(181, 3, 1);
+}
+
+.borderwhite {
+  border: 2px solid white;
 }
 
 .column {
@@ -330,6 +332,14 @@ input {
 .margintp {
   margin-top: 200px;
   margin-bottom: 20px;
+}
+
+.marginbtm {
+  margin-bottom: 15px;
+}
+
+.padding5 {
+  padding: 5px 5px 5px 5px;
 }
 
 .padding20 {
@@ -346,4 +356,14 @@ input {
 
 .round {
   border-radius: 5px;
+}
+
+/*get money back / withdraw */
+#getmymoneyback {
+  /* position: absolute;
+  top: 9%;
+  right: 6%;
+  font-size: 0.8rem; */
+  cursor: pointer;
+  color: rgb(177, 177, 177)
 }

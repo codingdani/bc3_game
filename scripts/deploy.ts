@@ -2,8 +2,6 @@ import { ethers } from "hardhat";
 
 async function main() {
 
-
-
   const Factory = await ethers.getContractFactory("Factory");
   const GuessingGame = await ethers.getContractFactory("GuessingGame");
 

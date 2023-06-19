@@ -1,6 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom';
-import { checkIfGameStarted, checkIfPlayerHasRevealed, claimServiceFee, claimWinnings, createGameContractInstance, getRevealedPlayerCount, revealGuess, startGame } from '../utils/interact';
+import {
+    checkIfGameStarted,
+    checkIfOwnerHasWithdrawn,
+    checkIfPlayerHasRevealed,
+    checkIfWinnerHasWithdrawn,
+    claimServiceFee,
+    claimWinnings,
+    createGameContractInstance,
+    deactivateGame,
+    getRevealedPlayerCount,
+    revealGuess,
+    startGame
+} from '../utils/interact';
 import loading from "../gif/loading-spinner.gif";
 
 function RevealPhaseScreen() {
@@ -14,13 +26,17 @@ function RevealPhaseScreen() {
     const [newReveal, setNewReveal] = useState<boolean>(false);
     const [revealCount, setRevealCount] = useState<number>(0);
     const [allRevealed, setAllRevealed] = useState<boolean>(false);
-    const [gameIsFinished, setGameIsFinished] = useState<boolean>(false);
+    const [gameHasStarted, setGameHasStarted] = useState<boolean>(false);
     const [winnerAddress, setWinnerAddress] = useState<string>("");
     const [isWinner, setIsWinner] = useState<boolean>(false);
+    const [serviceFeeWithdrawn, setServiceFeeWithdrawn] = useState<boolean>(false);
+    const [winnerHasWithdrawn, setWinnerHasWithdrawn] = useState<boolean>(false);
 
     useEffect(() => {
         scRevealMadeEventListener(gameAddress);
         scWinnerDeclaredEventListener(gameAddress);
+        scWinnerHasWithdrawnPriceListener(gameAddress);
+        scServiceFeeHasBeenWithdrawnListener(gameAddress);
         const fetchCurrentRevealCount = async () => {
             const count = await getRevealedPlayerCount(gameAddress);
             setRevealCount(count);
@@ -31,20 +47,30 @@ function RevealPhaseScreen() {
         }
         const fetchIfGameHasStarted = async () => {
             const started = await checkIfGameStarted(gameAddress);
-            setGameIsFinished(started);
+            setGameHasStarted(started);
         }
-        fetchIfHasRevealed();
+        const fetchIfWinnerHasWithdrawn = async () => {
+            const withdrawn = await checkIfWinnerHasWithdrawn(gameAddress);
+            setWinnerHasWithdrawn(withdrawn);
+        }
+        const fetchIfOwnerHasWithdrawn = async () => {
+            const withdrawn = await checkIfOwnerHasWithdrawn(gameAddress);
+            setServiceFeeWithdrawn(withdrawn);
+        }
         fetchCurrentRevealCount();
+        fetchIfHasRevealed();
         fetchIfGameHasStarted();
+        fetchIfWinnerHasWithdrawn();
+        fetchIfOwnerHasWithdrawn();
     }, []);
-
-    useEffect(() => {
-        if (gameIsFinished) fetchWinnerAddress(gameAddress);
-    }, [gameIsFinished])
 
     useEffect(() => {
         if (revealCount == playerCount) setAllRevealed(true);
     }, [revealCount])
+
+    useEffect(() => {
+        if (gameHasStarted) fetchWinnerAddress(gameAddress);
+    }, [gameHasStarted])
 
     useEffect(() => {
         if (winnerAddress.trim().toLowerCase() == walletAddress.trim().toLowerCase()) setIsWinner(true);
@@ -69,8 +95,31 @@ function RevealPhaseScreen() {
         contract.events.WinnerDeclared({}, (error: Error) => {
             if (error) console.log("Error: ", error.message)
             else {
-                setGameIsFinished(true);
+                console.log("winner declared");
+                setGameHasStarted(true);
                 fetchWinnerAddress(address);
+            }
+        })
+    }
+
+    function scWinnerHasWithdrawnPriceListener(address: string) {
+        const contract = createGameContractInstance(address);
+        contract.events.WinnerWithdrawn({}, (error: Error) => {
+            if (error) console.log("Error: ", error.message)
+            else {
+                console.log("winner has withdrawn");
+                setWinnerHasWithdrawn(true);
+            }
+        })
+    }
+
+    function scServiceFeeHasBeenWithdrawnListener(address: string) {
+        const contract = createGameContractInstance(address);
+        contract.events.OwnerWithdrawn({}, (error: Error) => {
+            if (error) console.log("Error: ", error.message);
+            else {
+                console.log("service fee has been withdrawn");
+                setServiceFeeWithdrawn(true);
             }
         })
     }
@@ -84,19 +133,19 @@ function RevealPhaseScreen() {
 
     const submitGuess = () => {
         if (guess > Number(gameDetails?.maxGuess) || guess < Number(gameDetails?.minGuess)) {
-            console.log("wrong guess entered")
+            console.log("The Guess is invalid. Check your Input.");
             return {
                 status: "Invalid Guess."
             };
         } else if (guess && salt && walletAddress.length > 0) {
             revealGuess(gameAddress, walletAddress, guess, salt).then((res) => {
                 if (res.confirmed == true) setHasRevealed(true);
-            })
+            });
             return {
                 status: "Transaction went through."
             };
         } else {
-            console.log("fail");
+            console.log("something's not right");
             return {
                 status: "There was a mistake",
             };
@@ -114,16 +163,24 @@ function RevealPhaseScreen() {
     }
 
     const getWinnings = async () => {
-        claimWinnings(gameAddress, walletAddress);
+        claimWinnings(gameAddress, walletAddress).then((res) => {
+            if (res.confirmed == true) setWinnerHasWithdrawn(true);
+        });
     }
 
     const getServiceFee = async () => {
-        claimServiceFee(gameAddress, walletAddress);
+        claimServiceFee(gameAddress, walletAddress).then((res) => {
+            if (res.confirmed == true) setServiceFeeWithdrawn(true);
+        })
+    }
+
+    const deactivateTheGame = async () => {
+        if (serviceFeeWithdrawn && winnerHasWithdrawn) deactivateGame(walletAddress, gameAddress);
     }
 
     return (
         <>
-            <Link to={`/entergame/${gameAddress}`} state={{ from: gameAddress }} id="backbtn" className="btn">
+            <Link to={`/commitphase/${gameAddress}`} state={{ from: gameAddress }} id="backbtn" className="btn">
                 back
             </Link>
             {newReveal ?
@@ -132,22 +189,30 @@ function RevealPhaseScreen() {
                     <br />
                 </>
                 : null}
+            {isMaster && serviceFeeWithdrawn && winnerHasWithdrawn ? <button className="btn" onClick={deactivateTheGame}>deactivate game</button> : null}
             <section className="flex evenly width100 height100">
                 <div className="textfield bordergold glowy">
                     <h3>reveal phase</h3>
                     <p className="secondarytext">{revealCount} / {playerCount} revealed</p>
                     {hasRevealed ?
                         <>
-                            {gameIsFinished ?
+                            {gameHasStarted ?
                                 <>
                                     <p className="padding20">the game is over</p>
                                     {isWinner ?
                                         <>
                                             <h3 className="padding20">you won!</h3>
-                                            <button className="btn" onClick={getWinnings}>claim your price</button>
+                                            {winnerHasWithdrawn ?
+                                                <p>the price has been withdrawn.</p>
+                                                :
+                                                <button className="btn" onClick={getWinnings}>claim your price</button>
+                                            }
                                         </>
                                         :
-                                        <p>you lost.</p>
+                                        <>
+                                            <p>you lost.</p>
+                                            <p>the winner is {winnerAddress}</p>
+                                        </>
                                     }
 
                                 </>
@@ -186,8 +251,14 @@ function RevealPhaseScreen() {
                 {isMaster ?
                     <div className="textfield bordergold glowy">
                         <h3>you are the game master</h3>
-                        {gameIsFinished ?
-                            <button className="btn" onClick={getServiceFee}>claim your service fee</button>
+                        {gameHasStarted ?
+                            <>
+                                {serviceFeeWithdrawn ?
+                                    <p>service fee has been withdrawn.</p>
+                                    :
+                                    <button className="btn" onClick={getServiceFee}>claim your service fee</button>
+                                }
+                            </>
                             :
                             <>
                                 <p><b>Condition</b>: all players have revealed their guess.</p>

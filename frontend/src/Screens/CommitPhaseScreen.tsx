@@ -9,7 +9,8 @@ import {
     getCurrentPlayerCount,
     getCurrentWalletConnected,
     getGameDetails,
-    startRevealPhase
+    startRevealPhase,
+    withdrawMyEntryFee
 } from '../utils/interact';
 import loading from "../gif/loading-spinner.gif";
 interface TGameDetails {
@@ -19,7 +20,7 @@ interface TGameDetails {
     minPlayers: string,
 };
 
-function EnterGame() {
+function CommitPhaseScreen() {
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -34,6 +35,8 @@ function EnterGame() {
     const [hasCommitted, setHasCommitted] = useState<boolean>(false);
     const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
     const [isRevealPhase, setIsRevealPhase] = useState<boolean>(false);
+    const [gameIsExpired, setGameIsExpired] = useState<boolean>(false);
+    const [showWithdrawButton, setShowWithdrawButton] = useState<boolean>(false);
 
     useEffect(() => {
         async function fetchWallet() {
@@ -79,7 +82,7 @@ function EnterGame() {
             maxGuess: game.maxGuess,
             minGuess: game.minGuess,
             minPlayers: game.minPlayers
-        })
+        });
     }
 
     function scCommitEventListener(address: string) {
@@ -117,7 +120,7 @@ function EnterGame() {
 
     const submitGuess = () => {
         if (guess > Number(gameDetails?.maxGuess) || guess < Number(gameDetails?.minGuess)) {
-            console.log("fail");
+            console.log("The Guess is invalid. Check your Input.");
             return {
                 status: "Invalid Guess."
             };
@@ -129,7 +132,7 @@ function EnterGame() {
                 status: "Transaction went through."
             };
         } else {
-            console.log("fail");
+            console.log("something's not right");
             return {
                 status: "There was a mistake",
             };
@@ -138,19 +141,38 @@ function EnterGame() {
 
     const enterRevealPhase = () => {
         if (playerCount >= Number(gameDetails?.minPlayers)) startRevealPhase(gameAddress, walletAddress);
+        else console.log("playercount not reached yet");
     }
 
+    const showWithdraw = async () => {
+        setShowWithdrawButton(!showWithdrawButton);
+    }
     return (
         <>
             <Link to="/opengames" id="backbtn" className="btn">
                 back
             </Link>
+            {hasCommitted ?
+                <div id="getmymoneyback" className="marginbtm">
+                    <span onClick={showWithdraw} className="padding5 borderred round">my money is stuck?</span>
+                    {showWithdrawButton ?
+                        <div className="padding5">
+                            <p>if the game master does not respond for 7 Days, you can withdraw your money</p>
+                            <br />
+                            <button className="btn" onClick={() => withdrawMyEntryFee(gameAddress, walletAddress)}>withdraw my money</button>
+                        </div>
+                        :
+                        null
+                    }
+                </div>
+                : null
+            }
             {newPlayerEntered ? <p className="padding20">a player has entered the game</p> : null}
-            {gameDetails ? (
+            {gameDetails ?
                 <>
                     <section className="flex evenly width100 height100">
                         <section>
-                            <div className="flexstart textfield bordergreen">
+                            <div className="flexstart textfield borderwhite">
                                 <p>Contract Info (<a href={`https://sepolia.etherscan.io/address/${gameAddress}`} target="_blank">show on etherscan</a>)</p>
                                 <p> address: {
                                     String(gameAddress).substring(0, 6) +
@@ -160,7 +182,7 @@ function EnterGame() {
                                 </p>
                                 <p>current players: <span className="importantnr">{playerCount}</span>  min. players: <span className="importantnr">{gameDetails.minPlayers}</span></p>
                             </div>
-                            <div className="textfield bordergreen">
+                            <div className="textfield borderwhite">
                                 <h3 className="secondarytext">RULES</h3>
                                 <div className="bordergold glowy round">
                                     <p className="padding20">The player with the closest guess to <br /> <b><span className="secondarytext">66.6% of the intersection</span> of all guesses</b><br /> wins the price.</p>
@@ -174,7 +196,7 @@ function EnterGame() {
                         <section>
                             {isMaster ?
                                 <>
-                                    <div className="textfield bordergold glowy">
+                                    <div className="textfield borderwhite">
                                         <h3>you are the game master</h3>
                                         {isRevealPhase ?
                                             <>
@@ -192,7 +214,6 @@ function EnterGame() {
                                                 <button className="btn padding20" onClick={enterRevealPhase}>start reveal phase</button>
                                                 <p>Once the condition is met, the game will start automatically in 24 hours or you can start it manually.</p>
                                             </>
-
                                         }
                                     </div>
                                 </>
@@ -252,9 +273,10 @@ function EnterGame() {
                             </div>
                         </section>
                     </section>
-                </>) : null}
+                </> : null
+            }
         </>
     )
 }
 
-export default EnterGame
+export default CommitPhaseScreen

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import CreateGame from './Screens/CreateGame';
 import CurrentOpenGames from './Screens/CurrentOpenGames';
-import EnterGame from './Screens/EnterGame';
 import HomeScreen from './Screens/HomeScreen';
+import CommitPhaseScreen from './Screens/CommitPhaseScreen';
 import RevealPhaseScreen from './Screens/RevealPhaseScreen';
 import { connectWallet, getCurrentWalletConnected } from "./utils/interact";
 
@@ -61,7 +61,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/creategame" element={<CreateGame />} />
-        <Route path="/entergame/:address" element={<EnterGame />} />
+        <Route path="/commitphase/:address" element={<CommitPhaseScreen />} />
         <Route path="/opengames" element={<CurrentOpenGames />} />
         <Route path="/revealphase/:address" element={<RevealPhaseScreen />} />
       </Routes>
