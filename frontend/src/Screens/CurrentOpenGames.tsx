@@ -75,6 +75,8 @@ function CurrentOpenGames() {
                     ))) : (
                     <div className="flex column">
                         <h2>no games here yet</h2>
+                        <p>you might need to refresh...</p>
+                        <br />
                         <Link to="/creategame" className="btn">create a game</Link>
                     </div>
                 )}

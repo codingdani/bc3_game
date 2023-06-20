@@ -31,11 +31,11 @@ function CommitPhaseScreen() {
     const [guess, setGuess] = useState<number>(0);
     const [salt, setSalt] = useState<number>(0);
     const [playerCount, setPlayerCount] = useState<number>(0);
+    const [minPlayerCountReached, setMinPlayerCountReached] = useState<boolean>(false);
     const [isMaster, setIsMaster] = useState<boolean>(false);
     const [hasCommitted, setHasCommitted] = useState<boolean>(false);
     const [newPlayerEntered, setNewPlayerEntered] = useState<boolean>(false);
     const [isRevealPhase, setIsRevealPhase] = useState<boolean>(false);
-    const [gameIsExpired, setGameIsExpired] = useState<boolean>(false);
     const [showWithdrawButton, setShowWithdrawButton] = useState<boolean>(false);
 
     useEffect(() => {
@@ -74,6 +74,10 @@ function CommitPhaseScreen() {
         fetchGameMasterInfo();
         fetchParticipationInfo();
     }, [walletAddress, location]);
+
+    useEffect(() => {
+        if (playerCount == Number(gameDetails?.minPlayers)) setMinPlayerCountReached(true);
+    }, [gameDetails, playerCount])
 
     const fetchGameData = async (address: string) => {
         const game = await getGameDetails(address);
@@ -137,6 +141,10 @@ function CommitPhaseScreen() {
                 status: "There was a mistake",
             };
         };
+    }
+
+    const handleKeypress = (e: React.KeyboardEvent) => {
+        if (e.key == 'Enter') submitGuess();
     }
 
     const enterRevealPhase = () => {
@@ -211,7 +219,11 @@ function CommitPhaseScreen() {
                                             </>
                                             :
                                             <>
-                                                <p><b>Condition</b>: min. player count reached.</p>
+                                                {minPlayerCountReached ?
+                                                    <p className="greentext">min player count reached.</p>
+                                                    :
+                                                    <p><b>Condition</b>: min. player count has to be reached.</p>
+                                                }
                                                 <button className="btn padding20" onClick={enterRevealPhase}>start reveal phase</button>
                                             </>
                                         }
@@ -229,7 +241,7 @@ function CommitPhaseScreen() {
                                         {isRevealPhase ?
                                             <>
                                                 <br />
-                                                <p>the reveal phase has started.</p>
+                                                <p className="greentext">the reveal phase has started.</p>
                                                 <button className="btn" onClick={() => navigate(`/revealphase/${gameAddress}`, { state: { gameDetails, gameAddress, playerCount, walletAddress, isMaster } })}>enter reveal phase</button>
                                                 <br />
                                             </>
@@ -246,20 +258,16 @@ function CommitPhaseScreen() {
                                             <p>this game has started already</p>
                                             :
                                             <>
-                                                <section className="flex evenly">
+                                                <form className="flex evenly" onKeyPress={handleKeypress}>
                                                     <div className="padding20">
                                                         <h3 className="primarytext padding20">guess: </h3>
-                                                        <form className="form-group">
-                                                            <input type="number" id="input" className="form-input" onChange={changeGuess} />
-                                                        </form>
+                                                        <input type="number" id="input" className="form-input" onChange={changeGuess} />
                                                     </div>
                                                     <div className="padding20">
                                                         <h3 className="secondarytext padding20">salt: </h3>
-                                                        <form className="form-group">
-                                                            <input type="number" id="input" className="form-input" placeholder="bsp: 1234" onChange={changeSalt} />
-                                                        </form>
+                                                        <input type="number" id="input" className="form-input" placeholder="bsp: 1234" onChange={changeSalt} />
                                                     </div>
-                                                </section>
+                                                </form>
                                                 <div className="flex padding20">
                                                     <h3 className='margin'>entry fee: </h3>
                                                     <span className='importantnr'> {gameDetails.entryFee}</span>

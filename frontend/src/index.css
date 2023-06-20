@@ -336,7 +336,12 @@ input {
 }
 
 .borderwhite {
-  border: 2px solid white;
+  border: 1px solid white;
+}
+
+.borderbottomwhite {
+  border-bottom: 1px solid white;
+  padding: 0 0 10px 0
 }
 
 .column {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     checkIfGameStarted,
     checkIfOwnerHasWithdrawn,
@@ -19,6 +19,7 @@ import loading from "../gif/loading-spinner.gif";
 
 function RevealPhaseScreen() {
 
+    const navigate = useNavigate();
     const { state } = useLocation();
     const { gameDetails, gameAddress, playerCount, walletAddress, isMaster } = state;
 
@@ -36,7 +37,13 @@ function RevealPhaseScreen() {
     const [winnerHasWithdrawn, setWinnerHasWithdrawn] = useState<boolean>(false);
     const [gameMasterNotResponding, setGameMasterNotResponding] = useState<boolean>(false);
 
+    // FIX PRESSING ENTER
+    // SHOW SERVICE FEE & WINNING FEE
+    // navigate after Game to CURRENTLY OPEN GAMES
+    //
+
     useEffect(() => {
+        //on first render all the information gets fetched from the blockchain
         scRevealMadeEventListener(gameAddress);
         scWinnerDeclaredEventListener(gameAddress);
         scWinnerHasWithdrawnPriceEventListener(gameAddress);
@@ -160,6 +167,10 @@ function RevealPhaseScreen() {
         };
     }
 
+    const handleKeypress = (e: React.KeyboardEvent) => {
+        if (e.key == 'Enter') submitGuess();
+    }
+
     const startLastPhase = () => {
         startGame(gameAddress, walletAddress);
     }
@@ -188,14 +199,25 @@ function RevealPhaseScreen() {
     }
 
     const deactivateTheGame = async () => {
-        if (serviceFeeWithdrawn && winnerHasWithdrawn) deactivateGame(walletAddress, gameAddress);
+        if (serviceFeeWithdrawn && winnerHasWithdrawn) deactivateGame(walletAddress, gameAddress)
+            .then((res) => {
+                if (res.confirmed == true) setTimeout(() => {
+                    navigate('/opengames')
+                }, 3000);
+            });
     }
 
     return (
         <>
-            <Link to={`/commitphase/${gameAddress}`} state={{ from: gameAddress }} id="backbtn" className="btn">
-                back
-            </Link>
+            {winnerHasWithdrawn ?
+                <Link to={'/opengames'} id="backbtn" className="btn">
+                    back
+                </Link>
+                :
+                <Link to={`/commitphase/${gameAddress}`} state={{ from: gameAddress }} id="backbtn" className="btn">
+                    back
+                </Link>
+            }
             {newReveal ?
                 <>
                     <p>a player has revealed his guess</p>
@@ -228,14 +250,14 @@ function RevealPhaseScreen() {
                                         </>
                                     }
                                     <br />
-                                    <h4>Scoreboard:</h4>
-                                    <div id="scoreboardhead">
-                                        <span>address</span>
+                                    <h3 className="secondarytext">Scoreboard:</h3>
+                                    <div id="scoreboardhead" className="borderbottomwhite">
+                                        <span>wallet address</span>
                                         <span className="primarytext">guess</span>
                                     </div>
                                     {scoreboard ? (
                                         scoreboard.map((score) => (
-                                            <section id="scoreboard">
+                                            <section id="scoreboard" className="round padding5">
                                                 <div>
                                                     {String(score._address).substring(0, 6) + "..." + String(score._address).substring(38)}
                                                 </div>
@@ -263,20 +285,16 @@ function RevealPhaseScreen() {
                         :
                         <>
                             <p>make sure to enter the exact same guess and salt as you committed in the first step. Otherwise you get disqualified without payback.</p>
-                            <section className="flex evenly">
+                            <form className="flex evenly" onKeyPress={handleKeypress}>
                                 <div className="padding20">
                                     <h3 className="primarytext padding20">guess: </h3>
-                                    <form className="form-group">
-                                        <input type="number" id="input" className="form-input" onChange={changeGuess} />
-                                    </form>
+                                    <input type="number" id="input" className="form-input" onChange={changeGuess} />
                                 </div>
                                 <div className="padding20">
                                     <h3 className="secondarytext padding20">salt: </h3>
-                                    <form className="form-group">
-                                        <input type="number" id="input" className="form-input" onChange={changeSalt} />
-                                    </form>
+                                    <input type="number" id="input" className="form-input" onChange={changeSalt} />
                                 </div>
-                            </section>
+                            </form>
                             <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>reveal</button>
                         </>
                     }
@@ -294,7 +312,15 @@ function RevealPhaseScreen() {
                             </>
                             :
                             <>
-                                <p><b>Condition</b>: all players have revealed their guess.</p>
+                                {allRevealed ?
+                                    <p className="greentext">all players have revealed their guess</p>
+                                    :
+                                    <>
+                                        <p className="secondarytext"><b>Conditions to start</b>:</p>
+                                        <p>(1) all players have revealed their guess.</p>
+                                        <p>(2) the deadline is over.</p>
+                                    </>
+                                }
                                 <br />
                                 <button className="btn padding20" onClick={startLastPhase}>Start</button>
                             </>
@@ -313,7 +339,7 @@ function RevealPhaseScreen() {
                                 {gameMasterNotResponding ?
                                     <>
                                         <p>
-                                            if the game master does not respond after <span className="primarytext"> 24 hours</span>, every players can start the game.
+                                            if the game master does not respond after <span className="primarytext"> 24 hours</span>, every players can start the game, even if not everyone has revealed their guess.
                                         </p>
                                         <p>
                                             <span className="secondarytext">remember</span>: you will have to pay the gas fees for starting the game.
