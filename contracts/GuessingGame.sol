@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-contract GuessingGame {
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract GuessingGame is ReentrancyGuard {
     event CommitMade(address indexed _from, bytes32 _hash);
     event RevealStart(address indexed _from, uint256 _deadline);
     event RevealMade(address indexed _from, uint256 _guess);
@@ -150,7 +152,7 @@ contract GuessingGame {
         emit RevealMade(msg.sender, guess);
     }
 
-    function withdraw() external {
+    function withdraw() external nonReentrant {
         uint256 time = block.timestamp;
         require(time > expired && !isStarted, "You cannot withdraw.");
         require(commits[msg.sender].commit != 0, "You didn't participate.");
@@ -168,7 +170,7 @@ contract GuessingGame {
         emit RevealStart(owner, revealDeadline);
     }
 
-    function finishGame() external onlyOwner gameExpired {
+    function finishGame() external gameExpired {
         uint256 time = block.timestamp;
         require(
             time > revealDeadline ||
@@ -194,7 +196,7 @@ contract GuessingGame {
         emit WinnerDeclared(winner);
     }
 
-    function payout() external {
+    function payout() external nonReentrant {
         require(winner == msg.sender, "You are not the winner.");
         require(!winnerHasWithdrawn, "You already withdrawed your win.");
         winnerHasWithdrawn = true;
@@ -203,7 +205,7 @@ contract GuessingGame {
         emit WinnerWithdrawn();
     }
 
-    function retrieveServiceFee() external onlyOwner {
+    function retrieveServiceFee() external onlyOwner nonReentrant {
         require(!ownerHasWithdrawn, "You retrieved your fees already.");
         ownerHasWithdrawn = true;
         (bool sent, ) = owner.call{value: result.serviceFeeAmount}("");
