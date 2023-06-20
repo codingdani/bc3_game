@@ -202,15 +202,15 @@ function RevealPhaseScreen() {
         if (serviceFeeWithdrawn && winnerHasWithdrawn) deactivateGame(walletAddress, gameAddress)
             .then((res) => {
                 if (res.confirmed == true) setTimeout(() => {
-                    navigate('/opengames')
-                }, 3000);
+                    navigate('/')
+                }, 2000);
             });
     }
 
     return (
         <>
             {winnerHasWithdrawn ?
-                <Link to={'/opengames'} id="backbtn" className="btn">
+                <Link to={'/'} id="backbtn" className="btn">
                     back
                 </Link>
                 :
