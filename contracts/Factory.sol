@@ -67,6 +67,7 @@ contract Factory is CloneFactory {
     }
 
     function deactivateGame(address master, address contractAddress) external {
+        require(msg.sender == master, "You can't deactivate that game.");
         isActiveGame[master][contractAddress] = false;
     }
 }
