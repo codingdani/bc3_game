@@ -230,6 +230,17 @@ export const getAllCurrentGames = async () => {
     };
     return gameArray;
 }
+export interface Result {
+    null: string,
+    one: string,
+    guess: string,
+    _address: string,
+}
+
+export const getResults = async (contractAddress: string) => {
+    const contract = createGameContractInstance(contractAddress);
+    return await contract.methods.getGuessesAfterFinish().call() as Result[];
+}
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 //GET NUMBERS FROM PUBLIC VARIABLES OF GAME CONTRACT

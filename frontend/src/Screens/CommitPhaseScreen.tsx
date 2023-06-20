@@ -157,7 +157,7 @@ function CommitPhaseScreen() {
                 <>
                     <section className="flex evenly width100 height100">
                         <section>
-                            <div className="flexstart textfield borderwhite">
+                            <div className="flexstart textfield">
                                 <p>Contract Info (<a href={`https://sepolia.etherscan.io/address/${gameAddress}`} target="_blank">show on etherscan</a>)</p>
                                 <p> address: {
                                     String(gameAddress).substring(0, 6) +
@@ -168,7 +168,7 @@ function CommitPhaseScreen() {
                                 <p>current players: <span className="importantnr">{playerCount}</span>  min. players: <span className="importantnr">{gameDetails.minPlayers}</span></p>
                                 {hasCommitted ?
                                     <div id="getmymoneyback" className="marginbtm">
-                                        <span onClick={showWithdraw} className="padding5 borderred round">my money is stuck?</span>
+                                        <div onClick={showWithdraw} className="padding5 borderred round pointer">my money is stuck?</div>
                                         {showWithdrawButton ?
                                             <div className="padding5">
                                                 <p>if the game master does not respond for 7 Days, you can withdraw your money</p>
@@ -183,7 +183,7 @@ function CommitPhaseScreen() {
                                 }
 
                             </div>
-                            <div className="textfield borderwhite">
+                            <div className="textfield">
                                 <h3 className="secondarytext">RULES</h3>
                                 <div className="bordergold glowy round">
                                     <p className="padding20">The player with the closest guess to <br /> <b><span className="secondarytext">66.6% of the intersection</span> of all guesses</b><br /> wins the price.</p>
@@ -213,7 +213,6 @@ function CommitPhaseScreen() {
                                             <>
                                                 <p><b>Condition</b>: min. player count reached.</p>
                                                 <button className="btn padding20" onClick={enterRevealPhase}>start reveal phase</button>
-                                                <p>Once the condition is met, the game will start automatically in 24 hours or you can start it manually.</p>
                                             </>
                                         }
                                     </div>

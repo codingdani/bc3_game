@@ -69,7 +69,7 @@ function CreateGame() {
                 </>
                 : null}
             <div id="gamecreation" className="textfield bordergold">
-                <p>Enter the number of players that have to commit to the contract before the game can be manually started or the timer for autostart goes off: </p>
+                <p>Enter the number of players that have to commit to the contract before the game can be manually started: </p>
                 <input type={"number"} placeholder="playercount" min={2} max={10} onChange={changePlayerCount}></input>
                 <div>
                     <p>Enter the range for the number the players can commit as their guess: </p>
