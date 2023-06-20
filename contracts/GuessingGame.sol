@@ -7,6 +7,7 @@ contract GuessingGame {
     event RevealMade(address indexed _from, uint256 _guess);
     event WinnerDeclared(address indexed _winner);
     event WinnerWithdrawn();
+    event WithdrawFailed();
     event OwnerWithdrawn();
 
     uint256 public constant DAY = 86400; //seconds
@@ -155,7 +156,8 @@ contract GuessingGame {
         require(commits[msg.sender].commit != 0, "You didn't participate.");
         require(!hasWithdrawn[msg.sender], "You already withdrawed.");
         hasWithdrawn[msg.sender] = true;
-        payable(msg.sender).transfer(RULES.entryFee);
+        (bool sent, ) = msg.sender.call{value: RULES.entryFee}("");
+        require(sent, "Withdraw has failed");
     }
 
     function startRevealPhase() external onlyOwner gameExpired {
@@ -169,7 +171,8 @@ contract GuessingGame {
     function finishGame() external onlyOwner gameExpired {
         uint256 time = block.timestamp;
         require(
-            time > revealDeadline || revealedPlayers == players.length,
+            time > revealDeadline ||
+                (revealedPlayers == players.length && msg.sender == owner),
             "The reveal deadline isn't over yet."
         );
         require(revealedPlayers != 0, "Nobody revealed their guess yet.");
@@ -195,14 +198,16 @@ contract GuessingGame {
         require(winner == msg.sender, "You are not the winner.");
         require(!winnerHasWithdrawn, "You already withdrawed your win.");
         winnerHasWithdrawn = true;
-        payable(winner).transfer(result.winningAmount);
+        (bool sent, ) = winner.call{value: result.winningAmount}("");
+        require(sent, "There was withdraw error.");
         emit WinnerWithdrawn();
     }
 
     function retrieveServiceFee() external onlyOwner {
         require(!ownerHasWithdrawn, "You retrieved your fees already.");
         ownerHasWithdrawn = true;
-        payable(owner).transfer(result.serviceFeeAmount);
+        (bool sent, ) = owner.call{value: result.serviceFeeAmount}("");
+        require(sent, "There was a withdraw error.");
         emit OwnerWithdrawn();
     }
 

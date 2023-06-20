@@ -73,8 +73,8 @@ describe("Factory", () => {
         it("should give the correct amount and contract addresses from a given master", async () => {
             const { factory, accounts } = await deployFixture();
             const contractList = await factory.getMasterGameList(accounts[1].address);
-            await factory.deactivateGame(accounts[1].address, contractList[0]);
-            await factory.deactivateGame(accounts[1].address, contractList[2]);
+            await factory.connect(accounts[1]).deactivateGame(accounts[1].address, contractList[0]);
+            await factory.connect(accounts[1]).deactivateGame(accounts[1].address, contractList[2]);
             expect((await factory.getAllActiveGames(accounts[1].address)).length).to.be.equal(2);
             expect((await factory.getAllActiveGames(accounts[1].address))[0]).to.be.equal(contractList[1]);
             expect((await factory.getAllActiveGames(accounts[1].address))[1]).to.be.equal(contractList[3]);
