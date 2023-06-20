@@ -89,10 +89,10 @@ function RevealPhaseScreen() {
             if (error) console.log(error.message);
             else {
                 setNewReveal(true);
-                let count = revealCount
-                setRevealCount(count++);
-                setTimeout(() => {
+                setTimeout(async () => {
                     setNewReveal(false);
+                    const count = await getRevealedPlayerCount(gameAddress);
+                    setRevealCount(count);
                 }, 5000);
             };
         });
