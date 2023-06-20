@@ -21,7 +21,7 @@ Just your personal API Key, not the whole Link.
 
 The Factory Contract is deployed with the Address:
 
-0xFB4a9f21AF37D78C5bE737BC89f62c8B3dF915C9
+0x4B1bf74D49AB20b8aFA11f109f67b1A122F8c947
 
 Save it as REACT_APP_FACTORY_CONTRACT in your .env file.
 
@@ -29,7 +29,7 @@ Save it as REACT_APP_FACTORY_CONTRACT in your .env file.
 
 The Guessing Game Contract is deployed with the Address:
 
-0x44138C44AE33a07e7a4c01dA6cEDbA4b4eC67cad
+0x0241bA6e7Db72BDA9DA6540B300dbF5De3e31B24
 
 Technically you won't need it, but you can save it in your .env file.
 
