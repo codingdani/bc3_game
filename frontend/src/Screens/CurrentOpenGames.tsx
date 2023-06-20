@@ -43,7 +43,6 @@ function CurrentOpenGames() {
     useEffect(() => {
         const getGameList = async () => {
             setLoading(true);
-            console.log("her stoppts")
             const currentGames = await getAllCurrentGames();
             setOpenGamesList(currentGames);
         };

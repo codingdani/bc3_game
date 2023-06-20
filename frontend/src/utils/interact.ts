@@ -221,10 +221,8 @@ const getAllGameMasters = async () => {
 }
 export const getAllCurrentGames = async () => {
     const allGameMasters: string[] = await getAllGameMasters();
-    console.log(allGameMasters);
     const gameArray = [];
     for (let i = 0; i < allGameMasters.length; i++) {
-        console.log("getting all games");
         const allGames = await factoryContract.methods.getAllActiveGames(allGameMasters[i]).call();
         gameArray.push(...allGames);
     };
