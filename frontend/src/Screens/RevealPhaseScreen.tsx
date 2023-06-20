@@ -284,7 +284,7 @@ function RevealPhaseScreen() {
                         </>
                         :
                         <>
-                            <p>make sure to enter the exact same guess and salt as you committed in the first step. Otherwise you get disqualified without payback.</p>
+                            <p>make sure to enter the exact same guess and salt as you committed in the first step.</p>
                             <form className="flex evenly" onKeyPress={handleKeypress}>
                                 <div className="padding20">
                                     <h3 className="primarytext padding20">guess: </h3>
