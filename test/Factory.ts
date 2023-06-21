@@ -35,6 +35,15 @@ describe("Factory", () => {
         return { factory, accounts }
     }
 
+    describe("createGame", () => {
+        it("should not create a game with wrong values", async () => {
+            const { factory, accounts } = await deployFixture();
+            await expect(factory.connect(accounts[2]).createGame(100, 0, 3, ethers.utils.parseEther("0.1"))).to.be.revertedWith("Max guess must be greater than min guess.");
+            expect((await factory.getMasterGameList(accounts[3].address)).length).to.be.equal(2);
+
+        })
+    })
+
 
 
     describe("getMasters", () => {

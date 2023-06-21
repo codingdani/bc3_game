@@ -9,7 +9,6 @@ contract GuessingGame is ReentrancyGuard {
     event RevealMade(address indexed _from, uint256 _guess);
     event WinnerDeclared(address indexed _winner);
     event WinnerWithdrawn();
-    event WithdrawFailed();
     event OwnerWithdrawn();
 
     uint256 public constant DAY = 86400; //seconds
@@ -38,6 +37,7 @@ contract GuessingGame is ReentrancyGuard {
         uint256 guess;
     }
 
+    // This struct is mainly for the scoreboard in frontend
     struct Result {
         uint256 target;
         uint256 winningAmount;
@@ -55,8 +55,7 @@ contract GuessingGame is ReentrancyGuard {
     uint256 public revealDeadline;
     uint256 public expired;
 
-    /**************** Game calculation */
-    uint256 sum;
+    uint256 private sum;
     uint256 public revealedPlayers;
 
     address public owner;
@@ -75,6 +74,11 @@ contract GuessingGame is ReentrancyGuard {
         address _owner
     ) external {
         require(!isInit, "The game has already been initialized");
+        require(
+            _maxGuess > _minGuess,
+            "Max guess must be greater than min guess."
+        );
+        require(_minPlayers >= 2, "There must be atleast 2 players");
         owner = _owner;
         RULES = Rules(_minGuess, _maxGuess, _minPlayers, _entryFee);
         isInit = true;
@@ -109,6 +113,9 @@ contract GuessingGame is ReentrancyGuard {
         return commits[msg.sender].revealed;
     }
 
+    /// @notice A function that is mainly for frontend
+    /// @return guesses as Array that has the form of [Player{address, guess}]
+
     function getGuessesAfterFinish() external view returns (Player[] memory) {
         require(isStarted, "You cannot see the guesses yet!");
         Player[] memory guesses = new Player[](players.length);
@@ -125,6 +132,9 @@ contract GuessingGame is ReentrancyGuard {
         return guesses;
     }
 
+    /// @notice It receives an submitted Hash from a player
+    /// @dev The hash get persisted in a state variable and will be later checked on
+
     function commitHash(bytes32 _hash) external payable gameExpired {
         require(phase == Phase.Commit, "The commit phase is over.");
         require(msg.value == RULES.entryFee, "Insufficient entry fee.");
@@ -136,6 +146,8 @@ contract GuessingGame is ReentrancyGuard {
         commits[msg.sender].commit = _hash;
         emit CommitMade(msg.sender, _hash);
     }
+
+    /// @notice After the game starts, the player has to reveal their values
 
     function reveal(uint256 guess, uint256 salt) external gameExpired {
         bytes32 commit = keccak256(abi.encodePacked(guess, salt));
@@ -152,6 +164,8 @@ contract GuessingGame is ReentrancyGuard {
         emit RevealMade(msg.sender, guess);
     }
 
+    /// @notice After a certain period of time, to prevent frozen assets, any user can withdraw their asset
+
     function withdraw() external nonReentrant {
         uint256 time = block.timestamp;
         require(time > expired && !isStarted, "You cannot withdraw.");
@@ -162,6 +176,8 @@ contract GuessingGame is ReentrancyGuard {
         require(sent, "Withdraw has failed");
     }
 
+    /// @notice After each player has committed a hash, the gamemaster can start the reveal Phase
+
     function startRevealPhase() external onlyOwner gameExpired {
         require(phase == Phase.Commit, "Already started reveal phase.");
         require(players.length >= RULES.minPlayers, "Not enough players.");
@@ -169,6 +185,8 @@ contract GuessingGame is ReentrancyGuard {
         revealDeadline = block.timestamp + DAY;
         emit RevealStart(owner, revealDeadline);
     }
+
+    /// @notice The actual game will be played here. Also the winner will be selected in this function
 
     function finishGame() external gameExpired {
         uint256 time = block.timestamp;
@@ -196,6 +214,8 @@ contract GuessingGame is ReentrancyGuard {
         emit WinnerDeclared(winner);
     }
 
+    /// @notice After a game is finished, the winner can retrieve his/her winnings
+
     function payout() external nonReentrant {
         require(winner == msg.sender, "You are not the winner.");
         require(!winnerHasWithdrawn, "You already withdrawed your win.");
@@ -205,6 +225,8 @@ contract GuessingGame is ReentrancyGuard {
         emit WinnerWithdrawn();
     }
 
+    /// @notice After a game is finished, the game master can retrieve his service fee in relation to the winnings
+
     function retrieveServiceFee() external onlyOwner nonReentrant {
         require(!ownerHasWithdrawn, "You retrieved your fees already.");
         ownerHasWithdrawn = true;
@@ -213,6 +235,10 @@ contract GuessingGame is ReentrancyGuard {
         emit OwnerWithdrawn();
     }
 
+    /// @notice This function finds out the minimum difference to a target number from all player
+    /// @param minDiff is the Rules largest number that a player can possible tip
+    /// @param target is a number that has been calculated from the sum of all players
+    /// @return minDiff is a number representing the minimun difference from all players from a target value
     function calcWinningDiff(
         uint256 minDiff,
         uint256 target
@@ -239,6 +265,12 @@ contract GuessingGame is ReentrancyGuard {
         }
     }
 
+    /// @notice This function determines the amount of possible winners
+    /// @param minDiff is the minimum difference from all players from a target number
+    /// @param target is a number that has been calculated from the sum of all players
+    /// @param count This number will be 0 since there is no winner yet
+    /// @return count is the number of possible winners
+
     function getAmountOfWinners(
         uint256 minDiff,
         uint256 target,
@@ -254,6 +286,12 @@ contract GuessingGame is ReentrancyGuard {
         }
         return count;
     }
+
+    /// @notice This function determines all possible Winners
+    /// @param minDiff is the minimum difference from all players from a target number
+    /// @param target is a number that has been calculated from the sum of all players
+    /// @param countWinners is a number that represents the number of all possible Winners
+    /// @return possibleWinners is an array that contains all possible winners
 
     function getPossibleWinners(
         uint256 minDiff,
