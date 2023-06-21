@@ -256,7 +256,7 @@ function RevealPhaseScreen() {
                                         :
                                         <>
                                             <h3 className="primarytext">you lost.</h3>
-                                            <p>the <span className="secondarytext">winner</span> is {
+                                            <p>the <span className="greentext">winner</span> is {
                                                 String(winnerAddress).substring(0, 6)
                                                 + "..." +
                                                 String(winnerAddress).substring(38)}
@@ -266,7 +266,7 @@ function RevealPhaseScreen() {
                                     <br />
                                     <h3 className="secondarytext">Scoreboard:</h3>
                                     <section className="flex">
-                                        <div>price: {winningPrice} </div>
+                                        <div><span className="greentext">price</span>: {winningPrice} </div>
                                         <div id="eth_logo"></div>
                                     </section>
                                     <section className="flex">
@@ -280,9 +280,15 @@ function RevealPhaseScreen() {
                                     {scoreboard ? (
                                         scoreboard.map((score) => (
                                             <section id="scoreboard" className="round padding5" key={score._address}>
-                                                <div>
-                                                    {String(score._address).substring(0, 6) + "..." + String(score._address).substring(38)}
-                                                </div>
+                                                {score._address.trim().toLowerCase() == winnerAddress.trim().toLowerCase() ?
+                                                    <div className="greentext">
+                                                        {String(score._address).substring(0, 6) + "..." + String(score._address).substring(38)}
+                                                    </div>
+                                                    :
+                                                    <div>
+                                                        {String(score._address).substring(0, 6) + "..." + String(score._address).substring(38)}
+                                                    </div>
+                                                }
                                                 {Number(score.guess) == Number(gameDetails.maxGuess) + 1 ?
                                                     <div>no reveal</div>
                                                     :

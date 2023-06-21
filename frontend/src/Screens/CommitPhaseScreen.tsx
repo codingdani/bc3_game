@@ -167,7 +167,7 @@ function CommitPhaseScreen() {
                         <section>
                             <div className="flexstart textfield">
                                 <p>Contract Info (<a href={`https://sepolia.etherscan.io/address/${gameAddress}`} target="_blank">show on etherscan</a>)</p>
-                                <p> address: {
+                                <p> contract address: {
                                     String(gameAddress).substring(0, 6) +
                                     "..." +
                                     String(gameAddress).substring(38)
