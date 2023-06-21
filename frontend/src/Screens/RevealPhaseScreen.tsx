@@ -256,7 +256,11 @@ function RevealPhaseScreen() {
                                         :
                                         <>
                                             <h3 className="primarytext">you lost.</h3>
-                                            <p>the <span className="secondarytext">winner</span> is {winnerAddress}</p>
+                                            <p>the <span className="secondarytext">winner</span> is {
+                                                String(winnerAddress).substring(0, 6)
+                                                + "..." +
+                                                String(winnerAddress).substring(38)}
+                                            </p>
                                         </>
                                     }
                                     <br />
