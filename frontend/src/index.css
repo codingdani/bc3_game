@@ -299,6 +299,10 @@ input {
   width: 100%;
 }
 
+.width80 {
+  width: 80%;
+}
+
 .height100 {
   height: 100%;
 }
@@ -341,7 +345,12 @@ input {
 
 .borderbottomwhite {
   border-bottom: 1px solid white;
-  padding: 0 0 10px 0
+  padding: 0 0 10px 0;
+}
+
+.bordertopwhite {
+  border-top: 1px solid white;
+  padding: 10px 0 0 0;
 }
 
 .column {
@@ -379,7 +388,6 @@ input {
 
 .gloww {
   box-shadow: 0px 0px 10px 1px rgba(239, 239, 239, 0.512);
-
 }
 
 .round {

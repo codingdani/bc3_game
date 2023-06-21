@@ -264,7 +264,8 @@ function RevealPhaseScreen() {
                                         </>
                                     }
                                     <br />
-                                    <h3 className="secondarytext">Scoreboard:</h3>
+                                    {scoreboard ? <div className="bordertopwhite width80"></div> : null}
+                                    <h3>Scoreboard</h3>
                                     <section className="flex">
                                         <div><span className="greentext">price</span>: {winningPrice} </div>
                                         <div id="eth_logo"></div>
