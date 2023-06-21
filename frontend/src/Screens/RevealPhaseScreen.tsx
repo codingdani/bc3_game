@@ -279,9 +279,13 @@ function RevealPhaseScreen() {
                                                 <div>
                                                     {String(score._address).substring(0, 6) + "..." + String(score._address).substring(38)}
                                                 </div>
-                                                <div>
-                                                    {String(score.guess)}
-                                                </div>
+                                                {Number(score.guess) == Number(gameDetails.maxGuess) + 1 ?
+                                                    <div>no reveal</div>
+                                                    :
+                                                    <div>
+                                                        {String(score.guess)}
+                                                    </div>
+                                                }
                                             </section>
                                         ))
                                     )
