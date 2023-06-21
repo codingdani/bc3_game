@@ -37,7 +37,7 @@ contract GuessingGame is ReentrancyGuard {
         uint256 guess;
     }
 
-    // This struct is mainly for the scoreboard in frontend
+    // This struct is mainly for the scoreboard in the frontend
     struct Result {
         uint256 target;
         uint256 winningAmount;
@@ -113,7 +113,7 @@ contract GuessingGame is ReentrancyGuard {
         return commits[msg.sender].revealed;
     }
 
-    /// @notice A function that is mainly for frontend
+    /// @notice A function that is mainly for the frontend
     /// @return guesses as Array that has the form of [Player{address, guess}]
 
     function getGuessesAfterFinish() external view returns (Player[] memory) {
@@ -133,7 +133,7 @@ contract GuessingGame is ReentrancyGuard {
     }
 
     /// @notice It receives an submitted Hash from a player
-    /// @dev The hash get persisted in a state variable and will be later checked on
+    /// @dev The hash gets persisted in a state variable and will be checked on later
 
     function commitHash(bytes32 _hash) external payable gameExpired {
         require(phase == Phase.Commit, "The commit phase is over.");
@@ -147,7 +147,7 @@ contract GuessingGame is ReentrancyGuard {
         emit CommitMade(msg.sender, _hash);
     }
 
-    /// @notice After the game starts, the player has to reveal their values
+    /// @notice After the game starts, the player has to reveal their guess
 
     function reveal(uint256 guess, uint256 salt) external gameExpired {
         bytes32 commit = keccak256(abi.encodePacked(guess, salt));
@@ -164,7 +164,7 @@ contract GuessingGame is ReentrancyGuard {
         emit RevealMade(msg.sender, guess);
     }
 
-    /// @notice After a certain period of time, to prevent frozen assets, any user can withdraw their asset
+    /// @notice After a certain period of time any user can withdraw their funds to prevent frozen assets
 
     function withdraw() external nonReentrant {
         uint256 time = block.timestamp;
@@ -214,7 +214,7 @@ contract GuessingGame is ReentrancyGuard {
         emit WinnerDeclared(winner);
     }
 
-    /// @notice After a game is finished, the winner can retrieve his/her winnings
+    /// @notice After a game is finished, the winner can retrieve their winnings
 
     function payout() external nonReentrant {
         require(winner == msg.sender, "You are not the winner.");
@@ -225,7 +225,7 @@ contract GuessingGame is ReentrancyGuard {
         emit WinnerWithdrawn();
     }
 
-    /// @notice After a game is finished, the game master can retrieve his service fee in relation to the winnings
+    /// @notice After a game is finished, the game master can retrieve their service fee in relation to the winnings
 
     function retrieveServiceFee() external onlyOwner nonReentrant {
         require(!ownerHasWithdrawn, "You retrieved your fees already.");
@@ -235,14 +235,15 @@ contract GuessingGame is ReentrancyGuard {
         emit OwnerWithdrawn();
     }
 
-    /// @notice This function finds out the minimum difference to a target number from all player
-    /// @param minDiff is the Rules largest number that a player can possible tip
-    /// @param target is a number that has been calculated from the sum of all players
-    /// @return minDiff is a number representing the minimun difference from all players from a target value
-    function calcWinningDiff(
-        uint256 minDiff,
-        uint256 target
-    ) private view returns (uint256) {
+    /// @notice This function calculates the minimum difference to 66% of the intersection of all revealed guesses
+    /// @param minDiff initially the largest number that a player can possibly commit as Rules.maxGuess from finishGame() params
+    /// @param target is a number that has been calculated from 66% of the intersection of the sum of all players guesses
+    /// @return minDiff is a number representing the minimun difference of all players from the target value
+    function calcWinningDiff(uint256 minDiff, uint256 target)
+        private
+        view
+        returns (uint256)
+    {
         for (uint256 i = 0; i < players.length; i++) {
             if (
                 commits[players[i]].revealed == true &&
@@ -254,10 +255,11 @@ contract GuessingGame is ReentrancyGuard {
         return minDiff;
     }
 
-    function absDiff(
-        uint256 num1,
-        uint256 num2
-    ) private pure returns (uint256) {
+    function absDiff(uint256 num1, uint256 num2)
+        private
+        pure
+        returns (uint256)
+    {
         if (num1 >= num2) {
             return num1 - num2;
         } else {
@@ -266,9 +268,9 @@ contract GuessingGame is ReentrancyGuard {
     }
 
     /// @notice This function determines the amount of possible winners
-    /// @param minDiff is the minimum difference from all players from a target number
-    /// @param target is a number that has been calculated from the sum of all players
-    /// @param count This number will be 0 since there is no winner yet
+    /// @param minDiff initially the largest number that a player can possibly commit as Rules.maxGuess from finishGame() params
+    /// @param target is a number that has been calculated from 66% of the intersection of the sum of all players guesses
+    /// @param count This number initially is 0 since there is no winner yet
     /// @return count is the number of possible winners
 
     function getAmountOfWinners(
@@ -288,10 +290,10 @@ contract GuessingGame is ReentrancyGuard {
     }
 
     /// @notice This function determines all possible Winners
-    /// @param minDiff is the minimum difference from all players from a target number
-    /// @param target is a number that has been calculated from the sum of all players
-    /// @param countWinners is a number that represents the number of all possible Winners
-    /// @return possibleWinners is an array that contains all possible winners
+    /// @param minDiff initially the largest number that a player can possibly commit as Rules.maxGuess from finishGame() params
+    /// @param target is a number that has been calculated from 66% of the intersection of the sum of all players guesses
+    /// @param countWinners is a number that represents the count of all possible Winners
+    /// @return possibleWinners is an array that contains all possible winners wallet addresses
 
     function getPossibleWinners(
         uint256 minDiff,
