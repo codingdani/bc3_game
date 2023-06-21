@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     checkIfGameStarted,
     checkIfOwnerHasWithdrawn,
@@ -9,14 +9,24 @@ import {
     claimWinnings,
     createGameContractInstance,
     deactivateGame,
+    getResults,
+    Result,
     getRevealedPlayerCount,
     revealGuess,
-    startGame
+    startGame,
+    getWinningPriceAndServiceFee
 } from '../utils/interact';
 import loading from "../gif/loading-spinner.gif";
 
 function RevealPhaseScreen() {
+    //the Reveal Phase Screen includes the reveal phase and the finish game stage
+    //shows second inputs for guess and salt, this time not hashed
+    //shows gamemaster button to start finish game
+    //shows winner & lets winner withdraw price with a button
+    //shows gamemaster a button to retreave service fee
+    //after service fee and winning price have been withdrawn, the deactivate game button shows
 
+    const navigate = useNavigate();
     const { state } = useLocation();
     const { gameDetails, gameAddress, playerCount, walletAddress, isMaster } = state;
 
@@ -29,14 +39,21 @@ function RevealPhaseScreen() {
     const [gameHasStarted, setGameHasStarted] = useState<boolean>(false);
     const [winnerAddress, setWinnerAddress] = useState<string>("");
     const [isWinner, setIsWinner] = useState<boolean>(false);
+    const [scoreboard, setScoreboard] = useState<Result[]>([]);
+    const [winningPrice, setWinningPrice] = useState<number>();
+    const [serviceFee, setServiceFee] = useState<number>();
     const [serviceFeeWithdrawn, setServiceFeeWithdrawn] = useState<boolean>(false);
     const [winnerHasWithdrawn, setWinnerHasWithdrawn] = useState<boolean>(false);
+    const [gameMasterNotResponding, setGameMasterNotResponding] = useState<boolean>(false);
+
+    // SHOW SERVICE FEE & WINNING FEE
 
     useEffect(() => {
+        //on first render all the information gets fetched from the blockchain
         scRevealMadeEventListener(gameAddress);
         scWinnerDeclaredEventListener(gameAddress);
-        scWinnerHasWithdrawnPriceListener(gameAddress);
-        scServiceFeeHasBeenWithdrawnListener(gameAddress);
+        scWinnerHasWithdrawnPriceEventListener(gameAddress);
+        scServiceFeeHasBeenWithdrawnEventListener(gameAddress);
         const fetchCurrentRevealCount = async () => {
             const count = await getRevealedPlayerCount(gameAddress);
             setRevealCount(count);
@@ -69,7 +86,10 @@ function RevealPhaseScreen() {
     }, [revealCount])
 
     useEffect(() => {
-        if (gameHasStarted) fetchWinnerAddress(gameAddress);
+        if (gameHasStarted) {
+            fetchWinnerAddress(gameAddress);
+            fetchResults(gameAddress);
+        }
     }, [gameHasStarted])
 
     useEffect(() => {
@@ -82,9 +102,10 @@ function RevealPhaseScreen() {
             if (error) console.log(error.message);
             else {
                 setNewReveal(true);
-                setRevealCount(revealCount + 1);
-                setTimeout(() => {
+                setTimeout(async () => {
                     setNewReveal(false);
+                    const count = await getRevealedPlayerCount(gameAddress);
+                    setRevealCount(count);
                 }, 5000);
             };
         });
@@ -102,7 +123,7 @@ function RevealPhaseScreen() {
         })
     }
 
-    function scWinnerHasWithdrawnPriceListener(address: string) {
+    function scWinnerHasWithdrawnPriceEventListener(address: string) {
         const contract = createGameContractInstance(address);
         contract.events.WinnerWithdrawn({}, (error: Error) => {
             if (error) console.log("Error: ", error.message)
@@ -113,7 +134,7 @@ function RevealPhaseScreen() {
         })
     }
 
-    function scServiceFeeHasBeenWithdrawnListener(address: string) {
+    function scServiceFeeHasBeenWithdrawnEventListener(address: string) {
         const contract = createGameContractInstance(address);
         contract.events.OwnerWithdrawn({}, (error: Error) => {
             if (error) console.log("Error: ", error.message);
@@ -152,14 +173,27 @@ function RevealPhaseScreen() {
         };
     }
 
+    const handleKeypress = (e: React.KeyboardEvent) => {
+        if (e.key == 'Enter') submitGuess();
+    }
+
     const startLastPhase = () => {
-        if (allRevealed) startGame(gameAddress, walletAddress);
+        startGame(gameAddress, walletAddress);
     }
 
     const fetchWinnerAddress = async (address: string) => {
         const contract = createGameContractInstance(address);
         const winner = await contract.methods.winner().call();
         setWinnerAddress(winner);
+    }
+
+    const fetchResults = async (address: string) => {
+        const results = await getResults(address);
+        setScoreboard(results);
+        const Fees = await getWinningPriceAndServiceFee(address);
+        setWinningPrice(Number(Fees.winningAmount));
+        setServiceFee(Number(Fees.serviceFeeAmount));
+
     }
 
     const getWinnings = async () => {
@@ -175,17 +209,28 @@ function RevealPhaseScreen() {
     }
 
     const deactivateTheGame = async () => {
-        if (serviceFeeWithdrawn && winnerHasWithdrawn) deactivateGame(walletAddress, gameAddress);
+        if (serviceFeeWithdrawn && winnerHasWithdrawn) deactivateGame(walletAddress, gameAddress)
+            .then((res) => {
+                if (res.confirmed == true) setTimeout(() => {
+                    navigate('/');
+                }, 2000);
+            });
     }
 
     return (
         <>
-            <Link to={`/commitphase/${gameAddress}`} state={{ from: gameAddress }} id="backbtn" className="btn">
-                back
-            </Link>
+            {winnerHasWithdrawn ?
+                <Link to={'/'} id="backbtn" className="btn">
+                    back
+                </Link>
+                :
+                <Link to={`/commitphase/${gameAddress}`} state={{ from: gameAddress }} id="backbtn" className="btn">
+                    back
+                </Link>
+            }
             {newReveal ?
                 <>
-                    <p>a player has revealed his guess</p>
+                    <p>a player has revealed their guess</p>
                     <br />
                 </>
                 : null}
@@ -201,7 +246,7 @@ function RevealPhaseScreen() {
                                     <p className="padding20">the game is over</p>
                                     {isWinner ?
                                         <>
-                                            <h3 className="padding20">you won!</h3>
+                                            <h3 className="greentext">you won !</h3>
                                             {winnerHasWithdrawn ?
                                                 <p>the price has been withdrawn.</p>
                                                 :
@@ -210,17 +255,49 @@ function RevealPhaseScreen() {
                                         </>
                                         :
                                         <>
-                                            <p>you lost.</p>
-                                            <p>the winner is {winnerAddress}</p>
+                                            <h3 className="primarytext">you lost.</h3>
+                                            <p>the <span className="secondarytext">winner</span> is {winnerAddress}</p>
                                         </>
                                     }
-
+                                    <br />
+                                    <h3 className="secondarytext">Scoreboard:</h3>
+                                    <section className="flex">
+                                        <div>price: {winningPrice} </div>
+                                        <div id="eth_logo"></div>
+                                    </section>
+                                    <section className="flex">
+                                        <div>service fee: {serviceFee}</div>
+                                        <div id="eth_logo"></div>
+                                    </section>
+                                    <div id="scoreboardhead" className="borderbottomwhite">
+                                        <span>wallet address</span>
+                                        <span className="primarytext">guess</span>
+                                    </div>
+                                    {scoreboard ? (
+                                        scoreboard.map((score) => (
+                                            <section id="scoreboard" className="round padding5" key={score._address}>
+                                                <div>
+                                                    {String(score._address).substring(0, 6) + "..." + String(score._address).substring(38)}
+                                                </div>
+                                                {Number(score.guess) == Number(gameDetails.maxGuess) + 1 ?
+                                                    <div>no reveal</div>
+                                                    :
+                                                    <div>
+                                                        {String(score.guess)}
+                                                    </div>
+                                                }
+                                            </section>
+                                        ))
+                                    )
+                                        :
+                                        null
+                                    }
                                 </>
                                 :
                                 <>
                                     <img src={loading} id="loadinggifsmall"></img>
                                     {allRevealed ?
-                                        <p>waiting for results...</p>
+                                        <p>waiting for game master...</p>
                                         :
                                         <p>waiting for other players...</p>
                                     }
@@ -229,27 +306,23 @@ function RevealPhaseScreen() {
                         </>
                         :
                         <>
-                            <p>make sure to enter the exact same guess and salt as you committed in the first step. Otherwise you get disqualified without payback.</p>
-                            <section className="flex evenly">
+                            <p>make sure to enter the exact same guess and salt as you committed in the first step.</p>
+                            <form className="flex evenly" onKeyPress={handleKeypress}>
                                 <div className="padding20">
                                     <h3 className="primarytext padding20">guess: </h3>
-                                    <form className="form-group">
-                                        <input type="number" id="input" className="form-input" onChange={changeGuess} />
-                                    </form>
+                                    <input type="number" id="input" className="form-input" onChange={changeGuess} />
                                 </div>
                                 <div className="padding20">
                                     <h3 className="secondarytext padding20">salt: </h3>
-                                    <form className="form-group">
-                                        <input type="number" id="input" className="form-input" onChange={changeSalt} />
-                                    </form>
+                                    <input type="number" id="input" className="form-input" onChange={changeSalt} />
                                 </div>
-                            </section>
+                            </form>
                             <button id="buttonintextfield" className="btn padding20" onClick={submitGuess}>reveal</button>
                         </>
                     }
                 </div>
                 {isMaster ?
-                    <div className="textfield bordergold glowy">
+                    <div className="textfield borderwhite">
                         <h3>you are the game master</h3>
                         {gameHasStarted ?
                             <>
@@ -261,14 +334,47 @@ function RevealPhaseScreen() {
                             </>
                             :
                             <>
-                                <p><b>Condition</b>: all players have revealed their guess.</p>
+                                {allRevealed ?
+                                    <p className="greentext">all players have revealed their guess</p>
+                                    :
+                                    <>
+                                        <p className="secondarytext"><b>Conditions to start</b>:</p>
+                                        <p>(1) all players have revealed their guess.</p>
+                                        <p>(2) the deadline is over.</p>
+                                    </>
+                                }
                                 <br />
                                 <button className="btn padding20" onClick={startLastPhase}>Start</button>
                             </>
                         }
                         <br />
                     </div>
-                    : null
+                    :
+                    <>
+                        {gameHasStarted ?
+                            null
+                            :
+                            <div className="textfield">
+                                <div className="pointer borderred padding20 round" onClick={() => setGameMasterNotResponding(!gameMasterNotResponding)}>
+                                    the gamemaster does not respond?
+                                </div>
+                                {gameMasterNotResponding ?
+                                    <>
+                                        <p>
+                                            if the game master does not respond after <span className="primarytext"> 24 hours</span>, every players can start the game, even if not everyone has revealed their guess.
+                                        </p>
+                                        <p>
+                                            <span className="secondarytext">remember</span>: you will have to pay the gas fees for starting the game.
+                                        </p>
+                                        <button className="btn padding20" onClick={startLastPhase}>Start</button>
+
+                                    </>
+                                    :
+                                    null
+                                }
+                            </div>
+                        }
+                    </>
                 }
             </section>
         </>

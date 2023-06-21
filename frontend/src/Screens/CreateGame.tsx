@@ -68,9 +68,9 @@ function CreateGame() {
                     </div>
                 </>
                 : null}
-            <div id="gamecreation" className="textfield bordergold">
-                <p>Enter the number of players that have to commit to the contract before the game can be manually started or the timer for autostart goes off: </p>
-                <input type={"number"} placeholder="playercount" min={2} max={10} onChange={changePlayerCount}></input>
+            <form id="gamecreation" className="textfield bordergold" onSubmit={(event: any) => event.preventDefault()}>
+                <p>Enter the number of players that have to commit to the contract before the game can be manually started: </p>
+                <input type={"number"} placeholder="playercount" max={10} onChange={changePlayerCount}></input>
                 <div>
                     <p>Enter the range for the number the players can commit as their guess: </p>
                     <input type={"number"} placeholder="min bsp: 0" onChange={changeMinGuess}></input>
@@ -81,12 +81,12 @@ function CreateGame() {
                 <div>
                     <p>Entry Fee: </p>
                     <div className="flex transform">
-                        <input type={"number"} placeholder="fee in ETH" id="entryfeeinput" onChange={changeEntryFee}></input>
+                        <input type={"number"} placeholder="fee in ETH" id="entryfeeinput" step="any" onChange={changeEntryFee}></input>
                         <div id="eth_logo" className="positioned"></div>
                     </div>
                 </div>
-                <button id="createbtn" className="btn margintp" onClick={() => submitForm()}>Create Game</button>
-            </div>
+                <button id="createbtn" className="btn margintp" onClick={submitForm}>Create Game</button>
+            </form>
         </>
     )
 }

@@ -221,14 +221,41 @@ const getAllGameMasters = async () => {
 }
 export const getAllCurrentGames = async () => {
     const allGameMasters: string[] = await getAllGameMasters();
-    console.log(allGameMasters);
     const gameArray = [];
     for (let i = 0; i < allGameMasters.length; i++) {
-        console.log("getting all games");
         const allGames = await factoryContract.methods.getAllActiveGames(allGameMasters[i]).call();
         gameArray.push(...allGames);
     };
-    return gameArray;
+    return gameArray as string[];
+}
+export interface Result {
+    null: string,
+    one: string,
+    guess: string,
+    _address: string,
+}
+
+export const getResults = async (contractAddress: string) => {
+    const contract = createGameContractInstance(contractAddress);
+    return await contract.methods.getGuessesAfterFinish().call() as Result[];
+}
+export interface payoutResults {
+    null: string,
+    one: string,
+    two: string,
+    serviceFeeAmount: string,
+    target: string,
+    winningAmount: string,
+}
+
+export const getWinningPriceAndServiceFee = async (contractAddress: string) => {
+    const contract = createGameContractInstance(contractAddress);
+    const result = await contract.methods.result().call() as payoutResults;
+    const winningFee = web3.utils.fromWei(result.winningAmount.toString(), "ether");
+    const serviceFeeAmount = web3.utils.fromWei(result.serviceFeeAmount.toString(), "ether");
+    result.winningAmount = winningFee;
+    result.serviceFeeAmount = serviceFeeAmount;
+    return result as payoutResults;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 

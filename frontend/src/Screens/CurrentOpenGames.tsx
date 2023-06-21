@@ -43,7 +43,6 @@ function CurrentOpenGames() {
     useEffect(() => {
         const getGameList = async () => {
             setLoading(true);
-            console.log("her stoppts")
             const currentGames = await getAllCurrentGames();
             setOpenGamesList(currentGames);
         };
@@ -76,6 +75,8 @@ function CurrentOpenGames() {
                     ))) : (
                     <div className="flex column">
                         <h2>no games here yet</h2>
+                        <p>you might need to refresh...</p>
+                        <br />
                         <Link to="/creategame" className="btn">create a game</Link>
                     </div>
                 )}
