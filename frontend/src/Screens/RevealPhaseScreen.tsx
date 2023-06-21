@@ -13,11 +13,18 @@ import {
     Result,
     getRevealedPlayerCount,
     revealGuess,
-    startGame
+    startGame,
+    getWinningPriceAndServiceFee
 } from '../utils/interact';
 import loading from "../gif/loading-spinner.gif";
 
 function RevealPhaseScreen() {
+    //the Reveal Phase Screen includes the reveal phase and the finish game stage
+    //shows second inputs for guess and salt, this time not hashed
+    //shows gamemaster button to start finish game
+    //shows winner & lets winner withdraw price with a button
+    //shows gamemaster a button to retreave service fee
+    //after service fee and winning price have been withdrawn, the deactivate game button shows
 
     const navigate = useNavigate();
     const { state } = useLocation();
@@ -33,14 +40,13 @@ function RevealPhaseScreen() {
     const [winnerAddress, setWinnerAddress] = useState<string>("");
     const [isWinner, setIsWinner] = useState<boolean>(false);
     const [scoreboard, setScoreboard] = useState<Result[]>([]);
+    const [winningPrice, setWinningPrice] = useState<number>();
+    const [serviceFee, setServiceFee] = useState<number>();
     const [serviceFeeWithdrawn, setServiceFeeWithdrawn] = useState<boolean>(false);
     const [winnerHasWithdrawn, setWinnerHasWithdrawn] = useState<boolean>(false);
     const [gameMasterNotResponding, setGameMasterNotResponding] = useState<boolean>(false);
 
-    // FIX PRESSING ENTER
     // SHOW SERVICE FEE & WINNING FEE
-    // navigate after Game to CURRENTLY OPEN GAMES
-    //
 
     useEffect(() => {
         //on first render all the information gets fetched from the blockchain
@@ -184,6 +190,10 @@ function RevealPhaseScreen() {
     const fetchResults = async (address: string) => {
         const results = await getResults(address);
         setScoreboard(results);
+        const Fees = await getWinningPriceAndServiceFee(address);
+        setWinningPrice(Number(Fees.winningAmount));
+        setServiceFee(Number(Fees.serviceFeeAmount));
+
     }
 
     const getWinnings = async () => {
@@ -202,7 +212,7 @@ function RevealPhaseScreen() {
         if (serviceFeeWithdrawn && winnerHasWithdrawn) deactivateGame(walletAddress, gameAddress)
             .then((res) => {
                 if (res.confirmed == true) setTimeout(() => {
-                    navigate('/')
+                    navigate('/');
                 }, 2000);
             });
     }
@@ -220,7 +230,7 @@ function RevealPhaseScreen() {
             }
             {newReveal ?
                 <>
-                    <p>a player has revealed his guess</p>
+                    <p>a player has revealed their guess</p>
                     <br />
                 </>
                 : null}
@@ -251,13 +261,21 @@ function RevealPhaseScreen() {
                                     }
                                     <br />
                                     <h3 className="secondarytext">Scoreboard:</h3>
+                                    <section className="flex">
+                                        <div>price: {winningPrice} </div>
+                                        <div id="eth_logo"></div>
+                                    </section>
+                                    <section className="flex">
+                                        <div>service fee: {serviceFee}</div>
+                                        <div id="eth_logo"></div>
+                                    </section>
                                     <div id="scoreboardhead" className="borderbottomwhite">
                                         <span>wallet address</span>
                                         <span className="primarytext">guess</span>
                                     </div>
                                     {scoreboard ? (
                                         scoreboard.map((score) => (
-                                            <section id="scoreboard" className="round padding5">
+                                            <section id="scoreboard" className="round padding5" key={score._address}>
                                                 <div>
                                                     {String(score._address).substring(0, 6) + "..." + String(score._address).substring(38)}
                                                 </div>
