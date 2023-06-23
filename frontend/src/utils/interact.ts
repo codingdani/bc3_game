@@ -321,10 +321,6 @@ export const checkIfOwnerHasWithdrawn = async (contractAddress: string) => {
     return await contract.methods.ownerHasWithdrawn().call() as boolean;
 }
 
-export const checkIfGameIsExpired = async (contractAddress: string) => {
-    const contract = createGameContractInstance(contractAddress);
-    return await contract.methods.expired().call() as boolean;
-}
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 //WALLET FUNCTIONALITY
