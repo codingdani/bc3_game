@@ -60,8 +60,8 @@ contract GuessingGame is ReentrancyGuard {
 
     address public owner;
     address public winner;
-    bool private winnerHasWithdrawn;
-    bool private ownerHasWithdrawn;
+    bool public winnerHasWithdrawn;
+    bool public ownerHasWithdrawn;
 
     bool private isInit = false;
     bool public isStarted = false;
