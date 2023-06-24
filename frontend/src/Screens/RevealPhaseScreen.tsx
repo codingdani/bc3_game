@@ -46,8 +46,6 @@ function RevealPhaseScreen() {
     const [winnerHasWithdrawn, setWinnerHasWithdrawn] = useState<boolean>(false);
     const [gameMasterNotResponding, setGameMasterNotResponding] = useState<boolean>(false);
 
-    // SHOW SERVICE FEE & WINNING FEE
-
     useEffect(() => {
         //on first render all the information gets fetched from the blockchain
         scRevealMadeEventListener(gameAddress);
